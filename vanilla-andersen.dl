@@ -1,0 +1,82 @@
+.symbol_type variable
+.symbol_type heapLocation
+.symbol_type fieldName
+.symbol_type methodName
+.symbol_type methodSignature
+.symbol_type invocationSite
+.symbol_type typeName
+
+// Input declarations
+.decl Move(v_to: variable, v_from: variable)
+.decl VCall(base: variable, sig: methodSignature, invo: invocationSite, callee: methodName)
+.decl Load(v_to: variable, v_base: variable, field: fieldName)
+.decl Store(v_base: variable, field: fieldName, v_from: variable)
+.decl FormalArg(called: methodName, num: number, to: variable)
+.decl ActualArg(invo: invocationSite, num: number, from: variable)
+.decl FormalReturn(method: methodName, from: variable)
+.decl ActualReturn(invo: invocationSite, to: variable)
+
+// Both
+.decl Reachable(m: methodName)
+
+// Deduced declarations
+.decl VarPointsTo(v: variable, h: heapLocation)
+.decl Alloc(v: variable, h: heapLocation, m: methodName)
+.decl FieldPointsTo(base_heap: heapLocation, field: fieldName, pointed_heap: heapLocation)
+.decl CallGraph(from: invocationSite, to: methodName)
+.decl HeapType(heap: heapLocation, type: typeName)
+.decl Lookup(type: typeName, sig: methodSignature, method: methodName)
+.decl ThisVar(method: methodName, var: variable)
+.decl InterProcAssign(to: variable, from: variable)
+
+VarPointsTo(Var, Heap) :-
+    Reachable(Meth), Alloc(Var, Heap, Meth).
+
+VarPointsTo(To, Heap) :-
+    Move(To, From), VarPointsTo(From, Heap).
+
+// Base is a variable name, and BaseHeap is the object pointed by Base
+FieldPointsTo(BaseHeap, Field, Heap) :-
+    Store(Base, Field, From), # Base.Field = From;
+    VarPointsTo(From, Heap),
+    VarPointsTo(Base, BaseHeap).
+
+VarPointsTo(To, Heap) :-
+    Load(To, Base, Field), # to = Base.Field
+    VarPointsTo(Base, BaseHeap),
+    FieldPointsTo(BaseHeap, Field, Heap).
+
+// InvocationSite: Invocation site (something representing the site from where the VCall is invoked)
+// SignatureOfCalledMethod: Signature of the called method
+// CalleeMethod: Method form which the VCall is made (top of the current callstack)
+Reachable(CalledMethod),
+VarPointsTo(This, Heap),
+CallGraph(InvocationSite, CalledMethod) :-
+    VCall(Base, SignatureOfCalledMethod, InvocationSite, CalleeMethod),
+    Reachable(CalleeMethod),
+    VarPointsTo(Base, Heap),
+    HeapType(Heap, HeapType),
+    Lookup(HeapType, SignatureOfCalledMethod, CalledMethod),
+    ThisVar(CalledMethod, This).
+
+InterProcAssign(To, From) :-
+    CallGraph(InvocationSite, CalledMethod),
+    FormalArg(CalledMethod, ArgumentNumber, To),
+    ActualArg(InvocationSite, ArgumentNumber, From).
+
+InterProcAssign(To, From) :-
+    CallGraph(Invo, Meth),
+    FormalReturn(Meth, From),
+    ActualReturn(Invo, To).
+
+VarPointsTo(To, Heap) :-
+    InterProcAssign(To, From),
+    VarPointsTo(From, Heap).
+
+// Force VarPointsTo output to stdout. For debugging purposes
+.output VarPointsTo(IO=stdout)
+
+Reachable("main").
+Alloc("a", "loc-1", "main").
+Move("b", "a").
+Move("c", "a").
