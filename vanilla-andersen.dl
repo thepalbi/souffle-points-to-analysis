@@ -16,16 +16,19 @@
 .decl FormalReturn(method: methodName, from: variable)
 .decl ActualReturn(invo: invocationSite, to: variable)
 
+// go together on something like "var a = new Something();"
+.decl HeapType(heap: heapLocation, type: typeName)
+.decl Alloc(v: variable, h: heapLocation, m: methodName)
+// produced by parsing type declarations?
+.decl Lookup(type: typeName, sig: methodSignature, method: methodName)
+
 // Both
 .decl Reachable(m: methodName)
 
 // Deduced declarations
 .decl VarPointsTo(v: variable, h: heapLocation)
-.decl Alloc(v: variable, h: heapLocation, m: methodName)
 .decl FieldPointsTo(base_heap: heapLocation, field: fieldName, pointed_heap: heapLocation)
 .decl CallGraph(from: invocationSite, to: methodName)
-.decl HeapType(heap: heapLocation, type: typeName)
-.decl Lookup(type: typeName, sig: methodSignature, method: methodName)
 .decl ThisVar(method: methodName, var: variable)
 .decl InterProcAssign(to: variable, from: variable)
 
