@@ -16,7 +16,7 @@ public class App {
         System.out.println("Hello World!");
     }
 
-    public void convertMethodBody(Body body) {
+    public Collection<SouffleFact> convertMethodBody(Body body) {
         StmtRouter router = new StmtRouter(new UUIDHeapLocationFactory());
         Collection<SouffleFact> factCollection = new HashSet<>();
 
@@ -25,6 +25,7 @@ public class App {
             // Going through each code statement, and converting to the Souffle fact when necessary
             // TODO: Add here some type of dispatching to the corresponding convert
         }
+        return factCollection;
     }
 
     public class StmtRouter {
@@ -38,12 +39,12 @@ public class App {
             if (stmt instanceof AssignStmt) {
                 AssignStmt assignStmt = (AssignStmt) stmt;
                 if (assignStmt.getLeftOp() instanceof Local) {
-                    this.routeLocalAssignmentFromMethod((Local) assignStmt.getLeftOp(), method);
+                    return this.routeLocalAssignmentFromMethod((Local) assignStmt.getLeftOp(), method);
                 } else if (assignStmt.getLeftOp() instanceof FieldRef) {
-                    this.routeFieldAssignmentFromMethod((FieldRef) assignStmt.getLeftOp(), method);
+                    return this.routeFieldAssignmentFromMethod((FieldRef) assignStmt.getLeftOp(), method);
                 }
-
             }
+            return null;
         }
 
         private SouffleFact routeFieldAssignmentFromMethod(FieldRef fieldRef, SootMethod method) {
@@ -63,25 +64,4 @@ public class App {
         }
     }
 
-    public class AllocFact implements SouffleFact {
-        private String FACT_FORMAT_STRING = "Alloc(%s, %s, %s).";
-
-        private String variableName;
-
-        // TODO: Define some heap location abstraction later
-        private String heapLocation;
-
-        private String owningMethod;
-
-        public AllocFact(String variableName, String heapLocation, String parentMethod) {
-            this.variableName = variableName;
-            this.heapLocation = heapLocation;
-            this.owningMethod = parentMethod;
-        }
-
-        @Override
-        public String translateToDatalog() {
-            return String.format(FACT_FORMAT_STRING, this.variableName, this.heapLocation, this.owningMethod);
-        }
-    }
 }
