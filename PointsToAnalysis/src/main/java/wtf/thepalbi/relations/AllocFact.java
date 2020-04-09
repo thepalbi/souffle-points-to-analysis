@@ -1,4 +1,4 @@
-package wtf.thepalbi;
+package wtf.thepalbi.relations;
 
 public class AllocFact implements SouffleFact {
     private String FACT_FORMAT_STRING = "Alloc(%s, %s, %s).";
@@ -17,7 +17,12 @@ public class AllocFact implements SouffleFact {
     }
 
     @Override
-    public String translateToDatalog() {
+    public String getRelationName() {
+        return "Alloc";
+    }
+
+    @Override
+    public String toIODirective() {
         return String.format(FACT_FORMAT_STRING, this.variableName, this.heapLocation, this.owningMethod);
     }
 }

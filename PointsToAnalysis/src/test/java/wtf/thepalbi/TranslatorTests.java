@@ -5,6 +5,7 @@ import soot.Body;
 import soot.PackManager;
 import soot.Scene;
 import soot.options.Options;
+import wtf.thepalbi.relations.SouffleFact;
 
 import java.util.Collection;
 
@@ -13,9 +14,11 @@ import static java.util.Arrays.asList;
 /**
  * Unit test for simple App.
  */
-public class AppTest {
+public class TranslatorTests {
 
-    public Body getBodyForClassAndMethod(String fullyQualifiedClassName, String methodName) {
+    public Body getBodyForClassAndMethod(String innerClassName, String methodName) {
+        String fullyQualifiedName = this.getClass().getCanonicalName() + "$" + innerClassName;
+
         Options.v().setPhaseOption("jb", "use-original-names: true");
 
         // This should be the path to the test-classes directory
@@ -23,9 +26,6 @@ public class AppTest {
         String pathToTargetClasses = pathToRunningTestJar.replace("test-classes", "classes");
 
         // Set as classpath both test and src classes
-        Options.v()
-                .set_soot_classpath(
-                        pathToRunningTestJar + ":" + pathToTargetClasses);
         Options.v().set_process_dir(asList(pathToRunningTestJar, pathToTargetClasses));
         // Avoid errors from resolving transitive dependencies
         Options.v().set_allow_phantom_refs(true);
@@ -38,27 +38,22 @@ public class AppTest {
         PackManager.v().runBodyPacks();
 
         // Get class first, then get desired method
-        return Scene.v().getSootClass(fullyQualifiedClassName).getMethodByName(methodName).getActiveBody();
+        return Scene.v().getSootClass(fullyQualifiedName).getMethodByName(methodName).getActiveBody();
     }
 
     @Test
-    public void shouldAnswerWithTrue() {
-        Body methodBody = getBodyForClassAndMethod("wtf.thepalbi.AppTest$ClassUnderTest", "main")
+    public void simpleTranslation() {
+        Body methodBody = getBodyForClassAndMethod("SomeStringGetsCreated", "method");
         PointsToFactGenerator pointsToFactGenerator = new PointsToFactGenerator();
         Collection<SouffleFact> factCollection = pointsToFactGenerator.fromMethodBody(methodBody);
     }
 
     // Class under test located in the same @Test class, to make things more clear
-    public static class ClassUnderTest {
-        public static void main(String[] args) {
-            TestClass.StringPair pair = new TestClass.StringPair();
-            pair.first = "holis";
-            pair.second = "perro";
+    public static class SomeStringGetsCreated {
+        public static String method() {
+            String b = new String();
+            String a = b ;
+            return a;
         }
-    }
-
-    public static class StringPair {
-        protected String first;
-        protected String second;
     }
 }

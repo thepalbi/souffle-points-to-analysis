@@ -1,4 +1,4 @@
-package wtf.thepalbi;
+package wtf.thepalbi.relations;
 
 public class StoreFact implements SouffleFact {
     private String baseVariableName;
@@ -12,7 +12,12 @@ public class StoreFact implements SouffleFact {
     }
 
     @Override
-    public String translateToDatalog() {
+    public String getRelationName() {
+        return "Store";
+    }
+
+    @Override
+    public String toIODirective() {
         return null;
     }
 }
