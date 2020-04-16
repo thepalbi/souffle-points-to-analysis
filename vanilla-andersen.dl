@@ -76,13 +76,10 @@ VarPointsTo(To, Heap) :-
     InterProcAssign(To, From),
     VarPointsTo(From, Heap).
 
+.input Reachable
+.input Move
+.input Alloc
+
 // Force VarPointsTo output to stdout. For debugging purposes
 .output VarPointsTo(IO=stdout)
 .output FieldPointsTo(IO=stdout)
-
-Reachable("main").
-Alloc("a", "loc-1", "main").
-Alloc("d", "loc-2", "main").
-Move("b", "a").
-Move("c", "a").
-Store("a", "gato", "d").
