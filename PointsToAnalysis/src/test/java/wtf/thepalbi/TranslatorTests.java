@@ -40,6 +40,8 @@ public class TranslatorTests {
         return Scene.v().getSootClass(fullyQualifiedName).getMethodByName(methodName).getActiveBody();
     }
 
+    // TODO: Start adding test cases just counting the expected fact count of some type to the Jimple translation
+
     @Test
     public void simpleTranslation() {
         Body methodBody = getBodyForClassAndMethod("SomeStringGetsCreated", "method");
@@ -49,11 +51,13 @@ public class TranslatorTests {
 
     // Class under test located in the same @Test class, to make things more clear
     public static class SomeStringGetsCreated {
-        public static String method() {
+        public String method() {
             String b = new String();
             Integer someInteger = new Integer(1);
             String a = someInteger.toString();
-            return a;
+            System.out.println(b);
+            b = a + "";
+            return b;
         }
     }
 }

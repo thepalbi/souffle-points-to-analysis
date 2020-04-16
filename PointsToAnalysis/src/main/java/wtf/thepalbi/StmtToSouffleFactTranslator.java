@@ -4,10 +4,7 @@ import soot.Body;
 import soot.Local;
 import soot.SootMethod;
 import soot.Value;
-import soot.jimple.AssignStmt;
-import soot.jimple.FieldRef;
-import soot.jimple.NewExpr;
-import soot.jimple.Stmt;
+import soot.jimple.*;
 import wtf.thepalbi.relations.*;
 import wtf.thepalbi.utils.HeapLocationFactory;
 
@@ -29,9 +26,8 @@ public class StmtToSouffleFactTranslator {
             AssignStmt assignStmt = (AssignStmt) stmt;
 
             // First handle right-box. This will contained the element assigned to the left-box
-            Value fromValue = assignStmt.getRightOp();
             Value toValue = assignStmt.getLeftOp();
-
+            Value fromValue = assignStmt.getRightOp();
 
             if (toValue instanceof Local && fromValue instanceof NewExpr) {
                 // There's a new allocation in this statement, and it's being assigned to a local variable
@@ -46,8 +42,14 @@ public class StmtToSouffleFactTranslator {
 
                 collectedFacts.add(allocFact);
                 collectedFacts.add(heapTypeFact);
+            } else if (toValue instanceof Local && fromValue instanceof Local) {
+                // Move
+                Local toLocal = (Local) toValue;
+                Local fromLocal = (Local) fromValue;
+                collectedFacts.add(new MoveFact(uniqueLocalName(toLocal, method), uniqueLocalName(fromLocal, method)));
+            } else if (toValue instanceof Local && fromValue instanceof InvokeExpr) {
+                // TODO: Implement Invoke (instance or other types) to Local assignment
             }
-
 
             if (assignStmt.getLeftOp() instanceof Local) {
             } else if (assignStmt.getLeftOp() instanceof FieldRef) {
