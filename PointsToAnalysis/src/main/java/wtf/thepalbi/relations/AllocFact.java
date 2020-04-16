@@ -2,6 +2,9 @@ package wtf.thepalbi.relations;
 
 import wtf.thepalbi.SouffleFact;
 
+/**
+ * Represents an instruction that allocates a new Heap object.
+ */
 public class AllocFact implements SouffleFact {
     private String FACT_FORMAT_STRING = "Alloc(%s, %s, %s).";
 

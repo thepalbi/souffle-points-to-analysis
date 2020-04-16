@@ -2,6 +2,9 @@ package wtf.thepalbi.relations;
 
 import wtf.thepalbi.SouffleFact;
 
+/**
+ * Matches a heap object to its type.
+ */
 public class HeapType implements SouffleFact {
     private final String heapLocation;
     private final String type;
