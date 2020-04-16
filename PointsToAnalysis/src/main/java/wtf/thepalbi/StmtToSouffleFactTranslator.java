@@ -8,10 +8,8 @@ import soot.jimple.AssignStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.NewExpr;
 import soot.jimple.Stmt;
-import wtf.thepalbi.relations.AllocFact;
-import wtf.thepalbi.relations.SouffleFact;
-import wtf.thepalbi.relations.StoreFact;
-import wtf.thepalbi.relations.VarTypeFact;
+import wtf.thepalbi.relations.*;
+import wtf.thepalbi.utils.HeapLocationFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -37,13 +35,17 @@ public class StmtToSouffleFactTranslator {
 
             if (toValue instanceof Local && fromValue instanceof NewExpr) {
                 // There's a new allocation in this statement, and it's being assigned to a local variable
-                // TODO: Add missing generated facts here (VarType, etc).
                 Local toLocal = (Local) toValue;
-                SouffleFact typeFact = new VarTypeFact(uniqueLocalName(toLocal, method), toValue.getType().toString());
-                collectedFacts.add(typeFact);
 
-                SouffleFact allocFact = new AllocFact(uniqueLocalName(toLocal, method), heapLocationFactory.generate(), getMethodIdentifier(method));
+                // HeapType
+                String newHeapLocation = heapLocationFactory.generate();
+                SouffleFact heapTypeFact = new HeapType(newHeapLocation, fromValue.getType().toString());
+
+                // Alloc
+                SouffleFact allocFact = new AllocFact(uniqueLocalName(toLocal, method), newHeapLocation, getMethodIdentifier(method));
+
                 collectedFacts.add(allocFact);
+                collectedFacts.add(heapTypeFact);
             }
 
 
@@ -68,6 +70,13 @@ public class StmtToSouffleFactTranslator {
 
     public Set<SouffleFact> translateMethodBody(Body body) {
         collectedFacts = new HashSet<>();
+
+        // VarType
+        // All locals can be collected from the supplied method body
+        body.getLocals().stream().forEach(local -> {
+            SouffleFact typeFact = new VarTypeFact(uniqueLocalName(local, body.getMethod()), local.getType().toString());
+            collectedFacts.add(typeFact);
+        });
 
         for (Stmt codeStmt : body.getUnits().stream().map((unit -> (Stmt) unit)).collect(toList())) {
             this.translateStmtFromMethod(codeStmt, body.getMethod());
