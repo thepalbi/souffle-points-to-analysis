@@ -1,5 +1,7 @@
 package wtf.thepalbi.relations;
 
+import wtf.thepalbi.SouffleFact;
+
 public class StoreFact implements SouffleFact {
     private String baseVariableName;
     private String fieldName;

@@ -2,18 +2,18 @@ package wtf.thepalbi.relations;
 
 import wtf.thepalbi.SouffleFact;
 
-public class VarTypeFact implements SouffleFact {
-    private final String localName;
+public class HeapType implements SouffleFact {
+    private final String heapLocation;
     private final String type;
 
-    public VarTypeFact(String localName, String typeName) {
-        this.localName = localName;
-        this.type = typeName;
+    public HeapType(String heapLocation, String type) {
+        this.heapLocation = heapLocation;
+        this.type = type;
     }
 
     @Override
     public String getRelationName() {
-        return "VarType";
+        return "HeapType";
     }
 
     @Override

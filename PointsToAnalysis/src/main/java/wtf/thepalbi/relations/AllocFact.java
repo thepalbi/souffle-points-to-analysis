@@ -1,5 +1,7 @@
 package wtf.thepalbi.relations;
 
+import wtf.thepalbi.SouffleFact;
+
 public class AllocFact implements SouffleFact {
     private String FACT_FORMAT_STRING = "Alloc(%s, %s, %s).";
 

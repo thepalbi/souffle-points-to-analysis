@@ -5,7 +5,6 @@ import soot.Body;
 import soot.PackManager;
 import soot.Scene;
 import soot.options.Options;
-import wtf.thepalbi.relations.SouffleFact;
 
 import java.util.Collection;
 
@@ -52,7 +51,8 @@ public class TranslatorTests {
     public static class SomeStringGetsCreated {
         public static String method() {
             String b = new String();
-            String a = b ;
+            Integer someInteger = new Integer(1);
+            String a = someInteger.toString();
             return a;
         }
     }

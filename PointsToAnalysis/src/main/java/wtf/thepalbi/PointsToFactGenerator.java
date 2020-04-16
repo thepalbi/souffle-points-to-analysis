@@ -1,13 +1,9 @@
 package wtf.thepalbi;
 
 import soot.Body;
-import soot.jimple.Stmt;
-import wtf.thepalbi.relations.SouffleFact;
+import wtf.thepalbi.utils.UUIDHeapLocationFactory;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class PointsToFactGenerator {
     public Collection<SouffleFact> fromMethodBody(Body body) {
