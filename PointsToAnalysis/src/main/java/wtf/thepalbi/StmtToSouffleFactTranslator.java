@@ -78,6 +78,10 @@ public class StmtToSouffleFactTranslator {
             collectedFacts.add(typeFact);
         });
 
+        Local thisLocal = body.getThisLocal();
+        SouffleFact thisVarFact = new ThisVarFact(uniqueLocalName(thisLocal, body.getMethod()), body.getMethod());
+        collectedFacts.add(thisVarFact);
+
         for (Stmt codeStmt : body.getUnits().stream().map((unit -> (Stmt) unit)).collect(toList())) {
             this.translateStmtFromMethod(codeStmt, body.getMethod());
         }
