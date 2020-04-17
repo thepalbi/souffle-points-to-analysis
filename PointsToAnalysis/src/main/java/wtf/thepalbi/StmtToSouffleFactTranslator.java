@@ -54,7 +54,7 @@ public class StmtToSouffleFactTranslator {
                 InstanceFieldRef toField = (InstanceFieldRef) toValue;
 
                 if (!(toField.getBase() instanceof Local)) {
-                    throw new FeatureNotImplementedException("STORE facts to non-locals");
+                    throw new FeatureNotImplementedException("STORE facts to non-locals bases");
                 }
 
                 Local toFieldBase = (Local) toField.getBase();
@@ -64,6 +64,23 @@ public class StmtToSouffleFactTranslator {
                         toField.getField().getSignature(),
                         uniqueLocalName(fromLocal, method));
                 collectedFacts.add(storeFact);
+            } else if (toValue instanceof Local && fromValue instanceof InstanceFieldRef) {
+                // NOTE: Static fields not handled. Maybe in here they are necessary.
+                // Load
+                InstanceFieldRef fromField = (InstanceFieldRef) fromValue;
+
+                if (!(fromField.getBase() instanceof Local)) {
+                    throw new FeatureNotImplementedException("LOAD facts from non-locals bases");
+                }
+
+                Local fromFieldBase = (Local) fromField.getBase();
+
+                Local toLocal = (Local) toValue;
+                SouffleFact loadFact = new LoadFact(
+                        uniqueLocalName(toLocal, method),
+                        uniqueLocalName(fromFieldBase, method),
+                        fromField.getField().getSignature());
+                collectedFacts.add(loadFact);
             }
 
             if (assignStmt.getLeftOp() instanceof Local) {
