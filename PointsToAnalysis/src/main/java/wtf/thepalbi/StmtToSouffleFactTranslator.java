@@ -1,11 +1,10 @@
 package wtf.thepalbi;
 
-import soot.Body;
-import soot.Local;
-import soot.SootMethod;
-import soot.Value;
+import soot.*;
 import soot.jimple.*;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import wtf.thepalbi.relations.*;
+import wtf.thepalbi.utils.FeatureNotImplementedException;
 import wtf.thepalbi.utils.HeapLocationFactory;
 
 import java.util.HashSet;
@@ -49,6 +48,22 @@ public class StmtToSouffleFactTranslator {
                 collectedFacts.add(new MoveFact(uniqueLocalName(toLocal, method), uniqueLocalName(fromLocal, method)));
             } else if (toValue instanceof Local && fromValue instanceof InvokeExpr) {
                 // TODO: Implement Invoke (instance or other types) to Local assignment
+            } else if (toValue instanceof InstanceFieldRef && fromValue instanceof Local) {
+                // NOTE: Static fields not handled. I think they are not involved in Points-To resolution?
+                // Store
+                InstanceFieldRef toField = (InstanceFieldRef) toValue;
+
+                if (!(toField.getBase() instanceof Local)) {
+                    throw new FeatureNotImplementedException("STORE facts to non-locals");
+                }
+
+                Local toFieldBase = (Local) toField.getBase();
+                Local fromLocal = (Local) fromValue;
+                SouffleFact storeFact = new StoreFact(
+                        uniqueLocalName(toFieldBase, method),
+                        toField.getField().getSignature(),
+                        uniqueLocalName(fromLocal, method));
+                collectedFacts.add(storeFact);
             }
 
             if (assignStmt.getLeftOp() instanceof Local) {

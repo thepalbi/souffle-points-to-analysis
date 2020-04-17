@@ -51,10 +51,13 @@ public class TranslatorTests {
 
     // Class under test located in the same @Test class, to make things more clear
     public static class SomeStringGetsCreated {
+        public String someString;
+
         public String method() {
             String b = new String();
             Integer someInteger = new Integer(1);
             String a = someInteger.toString();
+            this.someString = a;
             System.out.println(b);
             b = a + "";
             return b;
