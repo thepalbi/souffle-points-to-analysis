@@ -1,8 +1,10 @@
 package wtf.thepalbi;
 
-import soot.*;
+import soot.Body;
+import soot.Local;
+import soot.SootMethod;
+import soot.Value;
 import soot.jimple.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import wtf.thepalbi.relations.*;
 import wtf.thepalbi.utils.FeatureNotImplementedException;
 import wtf.thepalbi.utils.HeapLocationFactory;
