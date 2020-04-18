@@ -56,7 +56,7 @@ public class StmtToSouffleFactTranslator {
                 InstanceFieldRef toField = (InstanceFieldRef) toValue;
 
                 if (!(toField.getBase() instanceof Local)) {
-                    throw new FeatureNotImplementedException("STORE facts to non-locals bases");
+                    throw new FeatureNotImplementedException("'Store' facts to non-locals bases");
                 }
 
                 Local toFieldBase = (Local) toField.getBase();
@@ -72,7 +72,7 @@ public class StmtToSouffleFactTranslator {
                 InstanceFieldRef fromField = (InstanceFieldRef) fromValue;
 
                 if (!(fromField.getBase() instanceof Local)) {
-                    throw new FeatureNotImplementedException("LOAD facts from non-locals bases");
+                    throw new FeatureNotImplementedException("'Load' facts from non-locals bases");
                 }
 
                 Local fromFieldBase = (Local) fromField.getBase();
@@ -89,6 +89,15 @@ public class StmtToSouffleFactTranslator {
             } else if (assignStmt.getLeftOp() instanceof FieldRef) {
                 collectedFacts.add(this.routeFieldAssignmentFromMethod((FieldRef) assignStmt.getLeftOp(), method));
             }
+        } else if (stmt instanceof ReturnStmt) {
+
+            ReturnStmt returnStmt = (ReturnStmt) stmt;
+            if (!(returnStmt.getOp() instanceof Local)) {
+                throw new FeatureNotImplementedException("'FormalReturn' with non-local return op");
+            }
+
+            // FormalReturn
+            collectedFacts.add(new FormalReturnFact(method, uniqueLocalName((Local) returnStmt.getOp(), method)));
         }
     }
 
@@ -114,9 +123,16 @@ public class StmtToSouffleFactTranslator {
             collectedFacts.add(typeFact);
         });
 
+        // ThisVar
         Local thisLocal = body.getThisLocal();
         SouffleFact thisVarFact = new ThisVarFact(uniqueLocalName(thisLocal, body.getMethod()), body.getMethod());
         collectedFacts.add(thisVarFact);
+
+        // FormalArg
+        for (int i = 0; i < body.getMethod().getParameterCount(); i++) {
+            Local localForIthParameter = body.getParameterLocal(i);
+            collectedFacts.add(new FormalArgFact(body.getMethod(), i, uniqueLocalName(localForIthParameter, body.getMethod())));
+        }
 
         for (Stmt codeStmt : body.getUnits().stream().map((unit -> (Stmt) unit)).collect(toList())) {
             this.translateStmtFromMethod(codeStmt, body.getMethod());
