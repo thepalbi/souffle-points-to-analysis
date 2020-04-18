@@ -14,6 +14,8 @@ import java.util.Map;
 
 public class PointToAnalysis {
 
+    public static String IO_SEPARATOR = ";";
+
     private Map<String, FileWriter> factTypeToFile = new HashMap<>();
 
     public void main(Body methodBody) throws Exception {

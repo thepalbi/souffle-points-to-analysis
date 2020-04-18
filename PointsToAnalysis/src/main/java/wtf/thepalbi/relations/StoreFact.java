@@ -7,7 +7,14 @@ import wtf.thepalbi.SouffleFact;
  */
 public class StoreFact implements SouffleFact {
 
-    public StoreFact(String baseLocalName, String fieldName, String fromLocal) {
+    private final String base;
+    private final String fieldName;
+    private final String fromLocal;
+
+    public StoreFact(String base, String fieldName, String fromLocal) {
+        this.base = base;
+        this.fieldName = fieldName;
+        this.fromLocal = fromLocal;
     }
 
     @Override
@@ -17,6 +24,6 @@ public class StoreFact implements SouffleFact {
 
     @Override
     public String toIODirective() {
-        return null;
+        return FactWriter.threeParameters(base, fieldName, fromLocal);
     }
 }

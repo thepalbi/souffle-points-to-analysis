@@ -6,13 +6,8 @@ import wtf.thepalbi.SouffleFact;
  * Represents an instruction that allocates a new Heap object.
  */
 public class AllocFact implements SouffleFact {
-    private String FACT_FORMAT_STRING = "Alloc(%s, %s, %s).";
-
     private String variableName;
-
-    // TODO: Define some heap location abstraction later
     private String heapLocation;
-
     private String owningMethod;
 
     public AllocFact(String variableName, String heapLocation, String parentMethod) {
@@ -28,6 +23,6 @@ public class AllocFact implements SouffleFact {
 
     @Override
     public String toIODirective() {
-        return String.format(FACT_FORMAT_STRING, this.variableName, this.heapLocation, this.owningMethod);
+        return FactWriter.threeParameters(variableName, heapLocation, owningMethod);
     }
 }

@@ -21,6 +21,6 @@ public class VarTypeFact implements SouffleFact {
 
     @Override
     public String toIODirective() {
-        return null;
+        return FactWriter.twoParameters(localName, type);
     }
 }

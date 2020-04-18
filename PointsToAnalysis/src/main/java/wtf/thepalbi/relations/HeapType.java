@@ -21,6 +21,6 @@ public class HeapType implements SouffleFact {
 
     @Override
     public String toIODirective() {
-        return null;
+        return FactWriter.twoParameters(heapLocation, type);
     }
 }
