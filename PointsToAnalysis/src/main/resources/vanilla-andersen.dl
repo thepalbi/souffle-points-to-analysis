@@ -78,10 +78,19 @@ VarPointsTo(To, Heap) :-
     InterProcAssign(To, From),
     VarPointsTo(From, Heap).
 
-.input Reachable(IO=file, delimiter=";")
-.input Move(IO=file, delimiter=";")
 .input Alloc(IO=file, delimiter=";")
+.input Move(IO=file, delimiter=";")
+.input Load(IO=file, delimiter=";")
+.input Store(IO=file, delimiter=";")
+
+// Add VirtualCall facts as input
+
+.input Reachable(IO=file, delimiter=";")
+
 
 // Force VarPointsTo output to stdout. For debugging purposes
 .output VarPointsTo(IO=file, delimiter=";")
 .output FieldPointsTo(IO=file, delimiter=";")
+.output CallGraph(IO=file, delimiter=";")
+.output InterProcAssign(IO=file, delimiter=";")
+.output Reachable(IO=file, delimiter=";")

@@ -9,6 +9,7 @@ import soot.options.Options;
 import java.util.Collection;
 
 import static java.util.Arrays.asList;
+import static java.util.Arrays.parallelSort;
 
 /**
  * Unit test for simple App.
@@ -43,10 +44,12 @@ public class TranslatorTests {
     // TODO: Start adding test cases just counting the expected fact count of some type to the Jimple translation
 
     @Test
-    public void simpleTranslation() {
+    public void simpleTranslation() throws Exception {
         Body methodBody = getBodyForClassAndMethod("SomeStringGetsCreated", "method");
-        PointsToFactGenerator pointsToFactGenerator = new PointsToFactGenerator();
-        Collection<SouffleFact> factCollection = pointsToFactGenerator.fromMethodBody(methodBody);
+        PointToAnalysis analysis = new PointToAnalysis();
+        analysis.main(methodBody, Scene.v());
+
+        Collection<SouffleFact> factCollection = analysis.collectFactsFromMethodBody(methodBody);
     }
 
     // Class under test located in the same @Test class, to make things more clear

@@ -151,6 +151,9 @@ public class StmtToSouffleFactTranslator {
     public Set<SouffleFact> translateMethodBody(Body body) {
         collectedFacts = new HashSet<>();
 
+        // Add Reachable for current method
+        collectedFacts.add(new ReachableFact(body.getMethod()));
+
         // VarType
         // All locals can be collected from the supplied method body
         body.getLocals().stream().forEach(local -> {

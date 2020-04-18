@@ -25,5 +25,9 @@ public class FactWriter {
         return method.getSubSignature();
     }
 
+    public static String oneParameter(String p1) {
+        return p1 + "\n";
+    }
+
     ;
 }
