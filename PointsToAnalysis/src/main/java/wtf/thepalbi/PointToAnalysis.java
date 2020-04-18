@@ -2,15 +2,21 @@ package wtf.thepalbi;
 
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import soot.Body;
+import soot.Scene;
+import soot.SootClass;
+import soot.SootMethod;
+import wtf.thepalbi.relations.FactWriter;
+import wtf.thepalbi.relations.LookupFact;
 import wtf.thepalbi.utils.UUIDHeapLocationFactory;
 
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import static wtf.thepalbi.relations.FactWriter.writeMethod;
+import static wtf.thepalbi.relations.FactWriter.writeSignature;
 
 public class PointToAnalysis {
 
@@ -18,11 +24,30 @@ public class PointToAnalysis {
 
     private Map<String, FileWriter> factTypeToFile = new HashMap<>();
 
-    public void main(Body methodBody) throws Exception {
+    public void main(Body methodBody, Scene scene) throws Exception {
         Path workingDirectory = Files.createTempDirectory("points-to-");
         Path inputDirectory = Files.createDirectory(Paths.get(workingDirectory + "/input"));
         Path outputDirectory = Files.createDirectory(Paths.get(workingDirectory + "/output"));
         Collection<SouffleFact> collectedFacts = this.collectFactsFromMethodBody(methodBody);
+
+        // Generate Subtype facts
+        Collection<SouffleFact> lookupFacts = new HashSet<>();
+
+        collectedFacts.stream()
+                .filter(fact -> fact instanceof TypeFact)
+                .map(fact -> ((TypeFact) fact).getType())
+                .forEach(seenTypeName -> {
+                    SootClass seenClass = scene.getSootClass(seenTypeName);
+                    for (SootMethod method : seenClass.getMethods()) {
+                        // Generate a Lookup fact for seenType -> method -> method signature
+                        lookupFacts.add(new LookupFact(
+                                seenTypeName,
+                                writeSignature(method),
+                                writeMethod(method)));
+                    }
+                });
+
+        collectedFacts.addAll(lookupFacts);
 
         // Write all facts to their corresponding input files
         for (SouffleFact fact : collectedFacts) {

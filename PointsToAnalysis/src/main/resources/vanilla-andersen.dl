@@ -78,10 +78,10 @@ VarPointsTo(To, Heap) :-
     InterProcAssign(To, From),
     VarPointsTo(From, Heap).
 
-.input Reachable
-.input Move
-.input Alloc
+.input Reachable(IO=file, delimiter=";")
+.input Move(IO=file, delimiter=";")
+.input Alloc(IO=file, delimiter=";")
 
 // Force VarPointsTo output to stdout. For debugging purposes
-.output VarPointsTo(IO=stdout)
-.output FieldPointsTo(IO=stdout)
+.output VarPointsTo(IO=file, delimiter=";")
+.output FieldPointsTo(IO=file, delimiter=";")

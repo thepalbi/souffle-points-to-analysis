@@ -37,7 +37,7 @@ public class StmtToSouffleFactTranslator {
 
                 // HeapType
                 String newHeapLocation = heapLocationFactory.generate();
-                SouffleFact heapTypeFact = new HeapType(newHeapLocation, fromValue.getType().toString());
+                SouffleFact heapTypeFact = new HeapTypeFact(newHeapLocation, fromValue.getType().toString());
 
                 // Alloc
                 SouffleFact allocFact = new AllocFact(uniqueLocalName(toLocal, method), newHeapLocation, writeMethod(method));

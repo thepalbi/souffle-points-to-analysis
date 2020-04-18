@@ -20,4 +20,10 @@ public class FactWriter {
     public static String writeMethod(SootMethod method) {
         return method.getSignature();
     }
+
+    public static String writeSignature(SootMethod method) {
+        return method.getSubSignature();
+    }
+
+    ;
 }
