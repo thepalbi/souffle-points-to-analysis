@@ -55,12 +55,13 @@ public class TranslatorTests {
 
         public String method() {
             String b = new String();
-            Integer someInteger = new Integer(1);
-            String a = someInteger.toString();
-            this.someString = a;
-            System.out.println(b);
-            b = a + "";
-            return b;
+            b += "perro";
+            String c = this.method2(b);
+            return c;
+        }
+
+        public String method2(String gola) {
+            return gola + " gola";
         }
     }
 }

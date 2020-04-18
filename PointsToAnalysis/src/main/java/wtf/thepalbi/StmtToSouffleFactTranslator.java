@@ -50,6 +50,53 @@ public class StmtToSouffleFactTranslator {
                 collectedFacts.add(new MoveFact(uniqueLocalName(toLocal, method), uniqueLocalName(fromLocal, method)));
             } else if (toValue instanceof Local && fromValue instanceof InvokeExpr) {
                 // TODO: Implement Invoke (instance or other types) to Local assignment
+                Local toLocal = (Local) toValue;
+
+                if (!(fromValue instanceof InstanceInvokeExpr)) {
+                    // TODO: Log something, not currently handling this
+                    // Skipping
+                    return;
+                }
+
+                InstanceInvokeExpr invokeExpr = (InstanceInvokeExpr) fromValue;
+
+                if (!(invokeExpr.getBase() instanceof Local)) {
+                    throw new FeatureNotImplementedException("'VCall' does not support non-local bases");
+                }
+
+                Local callBase = (Local) invokeExpr.getBase();
+
+                // Generate invocation site
+                // NOTE: Characterizing an invocation site with methodsSignature and the line # inside the Java source
+                String invocationSite = String.format("%s:%d", method.getSignature(), stmt.getJavaSourceStartLineNumber());
+
+                // Called method signature, prepared for lookup. SubSignature is the signature of the method without the owning class.
+                String calledMethodSignature = invokeExpr.getMethodRef().getSubSignature().getString();
+
+                // VCall
+                collectedFacts.add(new VCallFact(
+                        uniqueLocalName(callBase, method),
+                        calledMethodSignature,
+                        invocationSite,
+                        method));
+
+                // ActualArg
+                for (int i = 0; i < invokeExpr.getArgCount(); i++) {
+                    Value ithParameterValue = invokeExpr.getArg(i);
+
+                    if (!(ithParameterValue instanceof Local)) {
+                        // TODO: Log something about a non-local argument in a instance virtual call
+                        continue;
+                    }
+
+                    Local ithParameterLocal = (Local) ithParameterValue;
+                    collectedFacts.add(new ActualArgFact(invocationSite, i, uniqueLocalName(ithParameterLocal, method)));
+                }
+
+                // ActualReturn
+                collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
+
+
             } else if (toValue instanceof InstanceFieldRef && fromValue instanceof Local) {
                 // NOTE: Static fields not handled. I think they are not involved in Points-To resolution?
                 // Store
