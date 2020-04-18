@@ -5,6 +5,8 @@ import wtf.thepalbi.TypeFact;
 
 /**
  * Represents the type of a local variable.
+ *
+ * NOTE: This is not used by vanilla andersen analysis
  */
 public class VarTypeFact implements SouffleFact, TypeFact {
     private final String localName;

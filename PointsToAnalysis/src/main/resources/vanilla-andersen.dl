@@ -78,17 +78,28 @@ VarPointsTo(To, Heap) :-
     InterProcAssign(To, From),
     VarPointsTo(From, Heap).
 
+// IR language
 .input Alloc(IO=file, delimiter=";")
 .input Move(IO=file, delimiter=";")
 .input Load(IO=file, delimiter=";")
 .input Store(IO=file, delimiter=";")
+.input VCall(IO=file, delimiter=";")
 
-// Add VirtualCall facts as input
+// Invocation related
+.input ActualArg(IO=file, delimiter=";")
+.input FormalArg(IO=file, delimiter=";")
+.input ActualReturn(IO=file, delimiter=";")
+.input FormalReturn(IO=file, delimiter=";")
+.input ThisVar(IO=file, delimiter=";")
 
+// Misc
 .input Reachable(IO=file, delimiter=";")
 
+// General
+.input HeapType(IO=file, delimiter=";")
+.input Lookup(IO=file, delimiter=";")
 
-// Force VarPointsTo output to stdout. For debugging purposes
+
 .output VarPointsTo(IO=file, delimiter=";")
 .output FieldPointsTo(IO=file, delimiter=";")
 .output CallGraph(IO=file, delimiter=";")
