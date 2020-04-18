@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
+import static wtf.thepalbi.relations.FactWriter.writeMethod;
 
 public class StmtToSouffleFactTranslator {
     private HeapLocationFactory heapLocationFactory;
@@ -39,7 +40,7 @@ public class StmtToSouffleFactTranslator {
                 SouffleFact heapTypeFact = new HeapType(newHeapLocation, fromValue.getType().toString());
 
                 // Alloc
-                SouffleFact allocFact = new AllocFact(uniqueLocalName(toLocal, method), newHeapLocation, getMethodIdentifier(method));
+                SouffleFact allocFact = new AllocFact(uniqueLocalName(toLocal, method), newHeapLocation, writeMethod(method));
 
                 collectedFacts.add(allocFact);
                 collectedFacts.add(heapTypeFact);
@@ -68,7 +69,7 @@ public class StmtToSouffleFactTranslator {
 
                 // Generate invocation site
                 // NOTE: Characterizing an invocation site with methodsSignature and the line # inside the Java source
-                String invocationSite = String.format("%s:%d", method.getSignature(), stmt.getJavaSourceStartLineNumber());
+                String invocationSite = String.format("%s:%d", writeMethod(method), stmt.getJavaSourceStartLineNumber());
 
                 // Called method signature, prepared for lookup. SubSignature is the signature of the method without the owning class.
                 String calledMethodSignature = invokeExpr.getMethodRef().getSubSignature().getString();
@@ -131,11 +132,6 @@ public class StmtToSouffleFactTranslator {
                         fromField.getField().getSignature());
                 collectedFacts.add(loadFact);
             }
-
-            if (assignStmt.getLeftOp() instanceof Local) {
-            } else if (assignStmt.getLeftOp() instanceof FieldRef) {
-                collectedFacts.add(this.routeFieldAssignmentFromMethod((FieldRef) assignStmt.getLeftOp(), method));
-            }
         } else if (stmt instanceof ReturnStmt) {
 
             ReturnStmt returnStmt = (ReturnStmt) stmt;
@@ -148,16 +144,8 @@ public class StmtToSouffleFactTranslator {
         }
     }
 
-    private SouffleFact routeFieldAssignmentFromMethod(FieldRef fieldRef, SootMethod method) {
-        return new StoreFact("baseVariableName", fieldRef.getField().getName(), this.getMethodIdentifier(method));
-    }
-
-    private String getMethodIdentifier(SootMethod method) {
-        return method.getSignature();
-    }
-
     private String uniqueLocalName(Local local, SootMethod method) {
-        return method.getSignature() + local.getName();
+        return writeMethod(method) + local.getName();
     }
 
     public Set<SouffleFact> translateMethodBody(Body body) {
