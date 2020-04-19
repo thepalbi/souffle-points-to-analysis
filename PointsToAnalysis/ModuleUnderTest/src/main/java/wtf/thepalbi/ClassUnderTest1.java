@@ -3,7 +3,8 @@ package wtf.thepalbi;
 public class ClassUnderTest1 {
     private String someString;
 
-    public static void main(String[] args) {
+    // When using String[] as a normal main method, FAILS
+    public static void main(String args) {
         ClassUnderTest1 test = new ClassUnderTest1();
         String b = new String();
         b += " holis";

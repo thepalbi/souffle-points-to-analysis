@@ -1,6 +1,5 @@
 package wtf.thepalbi;
 
-import fj.Hash;
 import soot.Body;
 import soot.Scene;
 import soot.SootClass;
@@ -9,6 +8,7 @@ import wtf.thepalbi.relations.LookupFact;
 import wtf.thepalbi.relations.ReachableFact;
 import wtf.thepalbi.utils.UUIDHeapLocationFactory;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,9 +20,16 @@ import static wtf.thepalbi.relations.FactWriter.writeSignature;
 
 public class PointToAnalysis {
 
+    public static final String OUTPUT_FILE_EXTENSION = ".csv";
     public static String IO_SEPARATOR = ";";
 
     private Map<String, FileWriter> factTypeToFile = new HashMap<>();
+    public static final List<String> EXPECTED_OUTPUT_FACTS = Arrays.asList(
+            "VarPointsTo",
+            "FieldPointsTo",
+            "CallGraph",
+            "InterProcAssign",
+            "Reachable");
 
     public void main(Iterable<Body> bodies, Body startingMethod, Scene scene) throws Exception {
         Path workingDirectory = Files.createTempDirectory("points-to-");
@@ -67,7 +74,20 @@ public class PointToAnalysis {
             throw new Exception("Souffle process failed");
         }
 
-        System.out.println(outputDirectory);
+        System.out.println("Output directory: " + outputDirectory);
+
+        Map<String, List<String[]>> parsedOutputFacts = new HashMap<>();
+
+        for (String expectedOutputFactsFile : EXPECTED_OUTPUT_FACTS) {
+            List<String[]> csv = new LinkedList<>();
+            // Using auto-closable
+            try (Scanner scanner = new Scanner(new File(outputDirectory + "/" + expectedOutputFactsFile + OUTPUT_FILE_EXTENSION))) {
+                while (scanner.hasNextLine()) {
+                    csv.add(scanner.nextLine().split(IO_SEPARATOR));
+                }
+            }
+            parsedOutputFacts.put(expectedOutputFactsFile, csv);
+        }
     }
 
     private Collection<SouffleFact> collectFactsForBody(Body methodBody, Scene scene) {
