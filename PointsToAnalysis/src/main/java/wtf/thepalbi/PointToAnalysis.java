@@ -1,12 +1,12 @@
 package wtf.thepalbi;
 
-import org.apache.commons.io.output.FileWriterWithEncoding;
+import fj.Hash;
 import soot.Body;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
-import wtf.thepalbi.relations.FactWriter;
 import wtf.thepalbi.relations.LookupFact;
+import wtf.thepalbi.relations.ReachableFact;
 import wtf.thepalbi.utils.UUIDHeapLocationFactory;
 
 import java.io.FileWriter;
@@ -24,33 +24,22 @@ public class PointToAnalysis {
 
     private Map<String, FileWriter> factTypeToFile = new HashMap<>();
 
-    public void main(Body methodBody, Scene scene) throws Exception {
+    public void main(Iterable<Body> bodies, Body startingMethod, Scene scene) throws Exception {
         Path workingDirectory = Files.createTempDirectory("points-to-");
         Path inputDirectory = Files.createDirectory(Paths.get(workingDirectory + "/input"));
         Path outputDirectory = Files.createDirectory(Paths.get(workingDirectory + "/output"));
-        Collection<SouffleFact> collectedFacts = this.collectFactsFromMethodBody(methodBody);
 
-        // Generate Subtype facts
-        Collection<SouffleFact> lookupFacts = new HashSet<>();
+        Collection<SouffleFact> accumulatedFacts = new HashSet<>();
 
-        collectedFacts.stream()
-                .filter(fact -> fact instanceof TypeFact)
-                .map(fact -> ((TypeFact) fact).getType())
-                .forEach(seenTypeName -> {
-                    SootClass seenClass = scene.getSootClass(seenTypeName);
-                    for (SootMethod method : seenClass.getMethods()) {
-                        // Generate a Lookup fact for seenType -> method -> method signature
-                        lookupFacts.add(new LookupFact(
-                                seenTypeName,
-                                writeSignature(method),
-                                writeMethod(method)));
-                    }
-                });
+        for (Body body : bodies) {
+            accumulatedFacts.addAll(this.collectFactsForBody(body, scene));
+        }
 
-        collectedFacts.addAll(lookupFacts);
+        // Add reachable facts according to starting method
+        accumulatedFacts.add(new ReachableFact(startingMethod.getMethod()));
 
         // Write all facts to their corresponding input files
-        for (SouffleFact fact : collectedFacts) {
+        for (SouffleFact fact : accumulatedFacts) {
             if (!this.factTypeToFile.containsKey(fact.getRelationName())) {
                 Path factsFile = Paths.get(inputDirectory + "/" + fact.getRelationName() + ".facts");
                 this.factTypeToFile.put(fact.getRelationName(), new FileWriter(factsFile.toFile()));
@@ -81,7 +70,28 @@ public class PointToAnalysis {
         System.out.println(outputDirectory);
     }
 
-    public Collection<SouffleFact> collectFactsFromMethodBody(Body body) {
-        return new StmtToSouffleFactTranslator(new UUIDHeapLocationFactory()).translateMethodBody(body);
+    private Collection<SouffleFact> collectFactsForBody(Body methodBody, Scene scene) {
+        Collection<SouffleFact> collectedFacts =
+                new StmtToSouffleFactTranslator(new UUIDHeapLocationFactory()).translateMethodBody(methodBody);
+
+        // Generate Subtype facts
+        Collection<SouffleFact> lookupFacts = new HashSet<>();
+
+        collectedFacts.stream()
+                .filter(fact -> fact instanceof TypeFact)
+                .map(fact -> ((TypeFact) fact).getType())
+                .forEach(seenTypeName -> {
+                    SootClass seenClass = scene.getSootClass(seenTypeName);
+                    for (SootMethod method : seenClass.getMethods()) {
+                        // Generate a Lookup fact for seenType -> method -> method signature
+                        lookupFacts.add(new LookupFact(
+                                seenTypeName,
+                                writeSignature(method),
+                                writeMethod(method)));
+                    }
+                });
+
+        collectedFacts.addAll(lookupFacts);
+        return collectedFacts;
     }
 }

@@ -69,6 +69,7 @@ public class StmtToSouffleFactTranslator {
 
                 // Generate invocation site
                 // NOTE: Characterizing an invocation site with methodsSignature and the line # inside the Java source
+                // TODO: Do something to craft a unique invocation site name when no line number available
                 String invocationSite = String.format("%s:%d", writeMethod(method), stmt.getJavaSourceStartLineNumber());
 
                 // Called method signature, prepared for lookup. SubSignature is the signature of the method without the owning class.
@@ -151,9 +152,6 @@ public class StmtToSouffleFactTranslator {
     public Set<SouffleFact> translateMethodBody(Body body) {
         collectedFacts = new HashSet<>();
 
-        // Add Reachable for current method
-        collectedFacts.add(new ReachableFact(body.getMethod()));
-
         // VarType
         // All locals can be collected from the supplied method body
         body.getLocals().stream().forEach(local -> {
@@ -162,9 +160,12 @@ public class StmtToSouffleFactTranslator {
         });
 
         // ThisVar
-        Local thisLocal = body.getThisLocal();
-        SouffleFact thisVarFact = new ThisVarFact(uniqueLocalName(thisLocal, body.getMethod()), body.getMethod());
-        collectedFacts.add(thisVarFact);
+        // Check if it's static prior to obtain this var.
+        if (!body.getMethod().isStatic()) {
+            Local thisLocal = body.getThisLocal();
+            SouffleFact thisVarFact = new ThisVarFact(uniqueLocalName(thisLocal, body.getMethod()), body.getMethod());
+            collectedFacts.add(thisVarFact);
+        }
 
         // FormalArg
         for (int i = 0; i < body.getMethod().getParameterCount(); i++) {
