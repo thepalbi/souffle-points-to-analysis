@@ -3,6 +3,8 @@ package wtf.thepalbi.relations;
 import wtf.thepalbi.SouffleFact;
 import wtf.thepalbi.TypeFact;
 
+import java.util.Objects;
+
 /**
  * Represents the type of a local variable.
  *
@@ -30,5 +32,19 @@ public class VarTypeFact implements SouffleFact, TypeFact {
     @Override
     public String getType() {
         return type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VarTypeFact that = (VarTypeFact) o;
+        return Objects.equals(localName, that.localName) &&
+                Objects.equals(type, that.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(localName, type);
     }
 }

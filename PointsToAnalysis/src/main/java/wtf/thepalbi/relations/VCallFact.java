@@ -3,6 +3,8 @@ package wtf.thepalbi.relations;
 import soot.SootMethod;
 import wtf.thepalbi.SouffleFact;
 
+import java.util.Objects;
+
 import static wtf.thepalbi.relations.FactWriter.writeMethod;
 
 public class VCallFact implements SouffleFact {
@@ -26,5 +28,21 @@ public class VCallFact implements SouffleFact {
     @Override
     public String toIODirective() {
         return FactWriter.fourParameters(baseLocalName, calledMethodSignature, invocationSite, writeMethod(method));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VCallFact vCallFact = (VCallFact) o;
+        return Objects.equals(baseLocalName, vCallFact.baseLocalName) &&
+                Objects.equals(calledMethodSignature, vCallFact.calledMethodSignature) &&
+                Objects.equals(invocationSite, vCallFact.invocationSite) &&
+                Objects.equals(method, vCallFact.method);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(baseLocalName, calledMethodSignature, invocationSite, method);
     }
 }

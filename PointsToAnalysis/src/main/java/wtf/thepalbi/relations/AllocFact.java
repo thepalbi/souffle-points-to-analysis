@@ -2,6 +2,8 @@ package wtf.thepalbi.relations;
 
 import wtf.thepalbi.SouffleFact;
 
+import java.util.Objects;
+
 /**
  * Represents an instruction that allocates a new Heap object.
  */
@@ -24,5 +26,20 @@ public class AllocFact implements SouffleFact {
     @Override
     public String toIODirective() {
         return FactWriter.threeParameters(variableName, heapLocation, owningMethod);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AllocFact allocFact = (AllocFact) o;
+        return Objects.equals(variableName, allocFact.variableName) &&
+                Objects.equals(heapLocation, allocFact.heapLocation) &&
+                Objects.equals(owningMethod, allocFact.owningMethod);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(variableName, heapLocation, owningMethod);
     }
 }

@@ -3,6 +3,8 @@ package wtf.thepalbi.relations;
 import wtf.thepalbi.SouffleFact;
 import wtf.thepalbi.TypeFact;
 
+import java.util.Objects;
+
 /**
  * Matches a heap object to its type.
  */
@@ -29,5 +31,19 @@ public class HeapTypeFact implements SouffleFact, TypeFact {
     @Override
     public String getType() {
         return type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        HeapTypeFact that = (HeapTypeFact) o;
+        return Objects.equals(heapLocation, that.heapLocation) &&
+                Objects.equals(type, that.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(heapLocation, type);
     }
 }
