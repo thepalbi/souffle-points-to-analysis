@@ -2,12 +2,12 @@ package wtf.thepalbi;
 
 import org.junit.Test;
 import soot.Body;
-import soot.JastAddJ.Opt;
 import soot.PackManager;
 import soot.Scene;
 import soot.options.Options;
 
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -58,6 +58,20 @@ public class TranslatorTests {
                 .flatMap(sootMethods -> sootMethods.stream().map(sootMethod -> sootMethod.getActiveBody()))
                 .collect(Collectors.toList());
 
-        analysis.main(targetBodies, methodBody, Scene.v());
+        PointsToResult result = analysis.run(targetBodies, methodBody, Scene.v());
+    }
+
+    @Test
+    public void findTargetClassOfFactoryWithInterfaces() throws Exception {
+        Body mainTestMethod = getBodyForClassAndMethod("wtf.thepalbi.ClassUnderTest2", "main");
+        String targetPackage = "wtf.thepalbi";
+        List<Body> targetBodies = Scene.v().getClasses().stream()
+                .filter(sootClass -> sootClass.getPackageName().startsWith(targetPackage))
+                // Filter interface, they do not have method bodies
+                .filter(sootClass -> !sootClass.isInterface())
+                .map(sootClass -> sootClass.getMethods())
+                .flatMap(sootMethods -> sootMethods.stream().map(sootMethod -> sootMethod.getActiveBody()))
+                .collect(Collectors.toList());
+        PointsToResult result = new PointToAnalysis().run(targetBodies, mainTestMethod, Scene.v());
     }
 }

@@ -1,5 +1,6 @@
 package wtf.thepalbi.relations;
 
+import soot.Type;
 import wtf.thepalbi.SouffleFact;
 import wtf.thepalbi.TypeFact;
 
@@ -12,11 +13,11 @@ import java.util.Objects;
  */
 public class VarTypeFact implements SouffleFact, TypeFact {
     private final String localName;
-    private final String type;
+    private final Type type;
 
-    public VarTypeFact(String localName, String typeName) {
+    public VarTypeFact(String localName, Type type) {
         this.localName = localName;
-        this.type = typeName;
+        this.type = type;
     }
 
     @Override
@@ -26,11 +27,11 @@ public class VarTypeFact implements SouffleFact, TypeFact {
 
     @Override
     public String toIODirective() {
-        return FactWriter.twoParameters(localName, type);
+        return FactWriter.twoParameters(localName, type.toString());
     }
 
     @Override
-    public String getType() {
+    public Type getType() {
         return type;
     }
 

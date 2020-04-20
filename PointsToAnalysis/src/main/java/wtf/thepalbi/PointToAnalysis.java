@@ -30,7 +30,7 @@ public class PointToAnalysis {
             "InterProcAssign",
             "Reachable");
 
-    public void main(Iterable<Body> bodies, Body startingMethod, Scene scene) throws Exception {
+    public PointsToResult run(Iterable<Body> bodies, Body startingMethod, Scene scene) throws Exception {
         Path workingDirectory = Files.createTempDirectory("points-to-");
         Path inputDirectory = Files.createDirectory(Paths.get(workingDirectory + "/input"));
         Path outputDirectory = Files.createDirectory(Paths.get(workingDirectory + "/output"));
@@ -60,7 +60,7 @@ public class PointToAnalysis {
                     // and HeapType for that fake local allocation
                     fixFacts.add(new FormalReturnFact(methodRef, fakeReturnLocalName));
                     fixFacts.add(new AllocFact(fakeReturnLocalName, fakeHeapObject, methodRef));
-                    fixFacts.add(new HeapTypeFact(fakeHeapObject, methodRef.getReturnType().toString()));
+                    fixFacts.add(new HeapTypeFact(fakeHeapObject, methodRef.getReturnType()));
                 });
         accumulatedFacts.addAll(fixFacts);
 
@@ -111,6 +111,28 @@ public class PointToAnalysis {
             }
             parsedOutputFacts.put(expectedOutputFactsFile, csv);
         }
+
+        // Compute a heapLocation to type map
+        Map<String, String> heapLocationToType = new HashMap<>();
+        accumulatedFacts.stream()
+                .filter(fact -> fact instanceof HeapTypeFact)
+                .map(fact -> (HeapTypeFact) fact)
+                .forEach(heapTypeFact -> {
+                    heapLocationToType.put(heapTypeFact.getHeapLocation(), heapTypeFact.getType().toString());
+                });
+
+        // Compute a local to HeapObject map. Note there
+        Map<String, List<HeapObject>> localToHeapObject = new HashMap<>();
+        for (String[] csvRow : parsedOutputFacts.get("VarPointsTo")) {
+            String localName = csvRow[0];
+            String heapLocation = csvRow[1];
+            HeapObject heapObject = new HeapObject(heapLocation, heapLocationToType.get(heapLocation));;
+            localToHeapObject
+                    .computeIfAbsent(localName, someLocalName -> new LinkedList<>())
+                    .add(heapObject);
+        }
+
+        return new PointsToResult(localToHeapObject);
     }
 
     private Collection<SouffleFact> collectFactsForBody(Body methodBody, Scene scene) {
@@ -122,7 +144,7 @@ public class PointToAnalysis {
 
         collectedFacts.stream()
                 .filter(fact -> fact instanceof TypeFact)
-                .map(fact -> ((TypeFact) fact).getType())
+                .map(fact -> ((TypeFact) fact).getType().toString())
                 .forEach(seenTypeName -> {
                     SootClass seenClass = scene.getSootClass(seenTypeName);
                     for (SootMethod method : seenClass.getMethods()) {

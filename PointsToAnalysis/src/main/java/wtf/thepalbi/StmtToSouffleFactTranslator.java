@@ -1,9 +1,6 @@
 package wtf.thepalbi;
 
-import soot.Body;
-import soot.Local;
-import soot.SootMethod;
-import soot.Value;
+import soot.*;
 import soot.jimple.*;
 import wtf.thepalbi.relations.*;
 import wtf.thepalbi.utils.FeatureNotImplementedException;
@@ -37,7 +34,7 @@ public class StmtToSouffleFactTranslator {
 
                 // HeapType
                 String newHeapLocation = heapLocationFactory.generate();
-                SouffleFact heapTypeFact = new HeapTypeFact(newHeapLocation, fromValue.getType().toString());
+                SouffleFact heapTypeFact = new HeapTypeFact(newHeapLocation, fromValue.getType());
 
                 // Alloc
                 SouffleFact allocFact = new AllocFact(uniqueLocalName(toLocal, method), newHeapLocation, method);
@@ -137,13 +134,21 @@ public class StmtToSouffleFactTranslator {
             }
         } else if (stmt instanceof ReturnStmt) {
 
-            ReturnStmt returnStmt = (ReturnStmt) stmt;
-            if (!(returnStmt.getOp() instanceof Local)) {
-                throw new FeatureNotImplementedException("'FormalReturn' with non-local return op");
-            }
-
             // FormalReturn
-            collectedFacts.add(new FormalReturnFact(method, uniqueLocalName((Local) returnStmt.getOp(), method)));
+            ReturnStmt returnStmt = (ReturnStmt) stmt;
+            if (returnStmt.getOp() instanceof Local) {
+                collectedFacts.add(new FormalReturnFact(method, uniqueLocalName((Local) returnStmt.getOp(), method)));
+            } else if (returnStmt.getOp() instanceof Immediate) {
+
+                // The returned object by the method is an immediate, so should simulate an allocate and heap type here
+                String heapLocation = heapLocationFactory.generate();
+                String variableName = writeMethod(method) + "return_immediate";
+                collectedFacts.add(new AllocFact(variableName, heapLocation, method));
+                collectedFacts.add(new HeapTypeFact(heapLocation, returnStmt.getOp().getType()));
+                collectedFacts.add(new FormalReturnFact(method, variableName));
+            } else {
+                throw new FeatureNotImplementedException("'FormalReturn' not implemented for " + returnStmt.getOp().getClass().getName());
+            }
         }
     }
 
@@ -157,7 +162,7 @@ public class StmtToSouffleFactTranslator {
         // VarType
         // All locals can be collected from the supplied method body
         body.getLocals().stream().forEach(local -> {
-            SouffleFact typeFact = new VarTypeFact(uniqueLocalName(local, body.getMethod()), local.getType().toString());
+            SouffleFact typeFact = new VarTypeFact(uniqueLocalName(local, body.getMethod()), local.getType());
             collectedFacts.add(typeFact);
         });
 

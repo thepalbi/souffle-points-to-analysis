@@ -1,5 +1,7 @@
 package wtf.thepalbi;
 
+import soot.Type;
+
 public interface TypeFact {
-    String getType();
+    Type getType();
 }

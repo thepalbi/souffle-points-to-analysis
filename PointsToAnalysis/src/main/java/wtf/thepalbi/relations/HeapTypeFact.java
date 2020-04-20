@@ -1,5 +1,6 @@
 package wtf.thepalbi.relations;
 
+import soot.Type;
 import wtf.thepalbi.SouffleFact;
 import wtf.thepalbi.TypeFact;
 
@@ -10,10 +11,9 @@ import java.util.Objects;
  */
 public class HeapTypeFact implements SouffleFact, TypeFact {
     private final String heapLocation;
+    private final Type type;
 
-    private final String type;
-
-    public HeapTypeFact(String heapLocation, String type) {
+    public HeapTypeFact(String heapLocation, Type type) {
         this.heapLocation = heapLocation;
         this.type = type;
     }
@@ -25,12 +25,16 @@ public class HeapTypeFact implements SouffleFact, TypeFact {
 
     @Override
     public String toIODirective() {
-        return FactWriter.twoParameters(heapLocation, type);
+        return FactWriter.twoParameters(heapLocation, type.toString());
     }
 
     @Override
-    public String getType() {
+    public Type getType() {
         return type;
+    }
+
+    public String getHeapLocation() {
+        return heapLocation;
     }
 
     @Override
