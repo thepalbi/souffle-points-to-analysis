@@ -1,5 +1,6 @@
 package wtf.thepalbi;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import soot.Body;
 import soot.PackManager;
@@ -7,10 +8,11 @@ import soot.Scene;
 import soot.options.Options;
 
 import java.util.List;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 /**
  * Unit test for simple App.
@@ -73,5 +75,8 @@ public class TranslatorTests {
                 .flatMap(sootMethods -> sootMethods.stream().map(sootMethod -> sootMethod.getActiveBody()))
                 .collect(Collectors.toList());
         PointsToResult result = new PointToAnalysis().run(targetBodies, mainTestMethod, Scene.v());
+        assertThat(result.localPointsTo(mainTestMethod.getMethod(), "r1"), not(empty()));
+        assertThat(result.localPointsTo(mainTestMethod.getMethod(), "r1"), hasSize(1));
+        assertThat(result.localPointsTo(mainTestMethod.getMethod(), "r1").get(0).getType(), is("wtf.thepalbi.Dog"));
     }
 }

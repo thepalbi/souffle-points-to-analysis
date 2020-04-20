@@ -9,4 +9,12 @@ public class HeapObject {
         this.heapLocation = heapLocation;
         this.type = type;
     }
+
+    public String getHeapLocation() {
+        return heapLocation;
+    }
+
+    public String getType() {
+        return type;
+    }
 }
