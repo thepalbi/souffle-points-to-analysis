@@ -1,8 +1,11 @@
 package wtf.thepalbi.relations;
 
+import soot.SootMethodInterface;
 import wtf.thepalbi.SouffleFact;
 
 import java.util.Objects;
+
+import static wtf.thepalbi.relations.FactWriter.writeMethod;
 
 /**
  * Represents an instruction that allocates a new Heap object.
@@ -10,12 +13,12 @@ import java.util.Objects;
 public class AllocFact implements SouffleFact {
     private String variableName;
     private String heapLocation;
-    private String owningMethod;
+    private SootMethodInterface inMethod;
 
-    public AllocFact(String variableName, String heapLocation, String parentMethod) {
+    public AllocFact(String variableName, String heapLocation, SootMethodInterface inMethod) {
         this.variableName = variableName;
         this.heapLocation = heapLocation;
-        this.owningMethod = parentMethod;
+        this.inMethod = inMethod;
     }
 
     @Override
@@ -25,7 +28,7 @@ public class AllocFact implements SouffleFact {
 
     @Override
     public String toIODirective() {
-        return FactWriter.threeParameters(variableName, heapLocation, owningMethod);
+        return FactWriter.threeParameters(variableName, heapLocation, writeMethod(inMethod));
     }
 
     @Override
@@ -35,11 +38,11 @@ public class AllocFact implements SouffleFact {
         AllocFact allocFact = (AllocFact) o;
         return Objects.equals(variableName, allocFact.variableName) &&
                 Objects.equals(heapLocation, allocFact.heapLocation) &&
-                Objects.equals(owningMethod, allocFact.owningMethod);
+                Objects.equals(inMethod, allocFact.inMethod);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(variableName, heapLocation, owningMethod);
+        return Objects.hash(variableName, heapLocation, inMethod);
     }
 }

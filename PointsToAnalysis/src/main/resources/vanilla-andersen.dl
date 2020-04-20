@@ -54,6 +54,7 @@ VarPointsTo(To, Heap) :-
 // InvocationSite: Invocation site (something representing the site from where the VCall is invoked)
 // SignatureOfCalledMethod: Signature of the called method
 // CalleeMethod: Method form which the VCall is made (top of the current callstack)
+// If the called method has no body, this rule will fail when lookig for a ThisVar fact.
 Reachable(CalledMethod),
 VarPointsTo(This, Heap),
 CallGraph(InvocationSite, CalledMethod) :-
@@ -63,6 +64,17 @@ CallGraph(InvocationSite, CalledMethod) :-
     HeapType(Heap, HeapType),
     Lookup(HeapType, SignatureOfCalledMethod, CalledMethod),
     ThisVar(CalledMethod, This).
+
+// Handle calls for methods without body. Once the CallGraph is generated,
+// InterProcAssign will be handled by the fake FormalReturn facts
+Reachable(CalledMethod),
+CallGraph(InvocationSite, CalledMethod) :-
+    VCall(Base, SignatureOfCalledMethod, InvocationSite, CalleeMethod),
+    Reachable(CalleeMethod),
+    VarPointsTo(Base, Heap),
+    HeapType(Heap, HeapType),
+    Lookup(HeapType, SignatureOfCalledMethod, CalledMethod),
+    !ThisVar(CalledMethod, _).
 
 InterProcAssign(To, From) :-
     CallGraph(InvocationSite, CalledMethod),

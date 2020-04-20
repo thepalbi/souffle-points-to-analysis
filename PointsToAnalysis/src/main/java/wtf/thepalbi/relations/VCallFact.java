@@ -1,6 +1,7 @@
 package wtf.thepalbi.relations;
 
 import soot.SootMethod;
+import soot.SootMethodRef;
 import wtf.thepalbi.SouffleFact;
 
 import java.util.Objects;
@@ -12,12 +13,14 @@ public class VCallFact implements SouffleFact {
     private final String calledMethodSignature;
     private final String invocationSite;
     private final SootMethod method;
+    private SootMethodRef calledMethodRef;
 
-    public VCallFact(String baseLocalName, String calledMethodSignature, String invocationSite, SootMethod method) {
+    public VCallFact(String baseLocalName, String calledMethodSignature, String invocationSite, SootMethod method, SootMethodRef calledMethodRef) {
         this.baseLocalName = baseLocalName;
         this.calledMethodSignature = calledMethodSignature;
         this.invocationSite = invocationSite;
         this.method = method;
+        this.calledMethodRef = calledMethodRef;
     }
 
     @Override
@@ -44,5 +47,9 @@ public class VCallFact implements SouffleFact {
     @Override
     public int hashCode() {
         return Objects.hash(baseLocalName, calledMethodSignature, invocationSite, method);
+    }
+
+    public SootMethodRef getCalledMethodRef() {
+        return calledMethodRef;
     }
 }

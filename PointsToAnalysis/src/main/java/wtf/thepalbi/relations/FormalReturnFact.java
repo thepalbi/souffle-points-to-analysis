@@ -1,6 +1,7 @@
 package wtf.thepalbi.relations;
 
 import soot.SootMethod;
+import soot.SootMethodInterface;
 import wtf.thepalbi.SouffleFact;
 
 import java.util.Objects;
@@ -8,10 +9,10 @@ import java.util.Objects;
 import static wtf.thepalbi.relations.FactWriter.writeMethod;
 
 public class FormalReturnFact implements SouffleFact {
-    private final SootMethod method;
+    private final SootMethodInterface method;
     private final String localName;
 
-    public FormalReturnFact(SootMethod method, String localName) {
+    public FormalReturnFact(SootMethodInterface method, String localName) {
         this.method = method;
         this.localName = localName;
     }

@@ -1,6 +1,7 @@
 package wtf.thepalbi.relations;
 
 import soot.SootMethod;
+import soot.SootMethodInterface;
 
 import static wtf.thepalbi.PointToAnalysis.IO_SEPARATOR;
 
@@ -17,7 +18,7 @@ public class FactWriter {
         return p1 + IO_SEPARATOR + p2 + IO_SEPARATOR + p3 + IO_SEPARATOR + p4 + "\n";
     }
 
-    public static String writeMethod(SootMethod method) {
+    public static String writeMethod(SootMethodInterface method) {
         return method.getSignature();
     }
 

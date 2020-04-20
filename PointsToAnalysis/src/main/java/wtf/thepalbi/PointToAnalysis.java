@@ -1,11 +1,8 @@
 package wtf.thepalbi;
 
-import soot.Body;
-import soot.Scene;
-import soot.SootClass;
-import soot.SootMethod;
-import wtf.thepalbi.relations.LookupFact;
-import wtf.thepalbi.relations.ReachableFact;
+import soot.*;
+import wtf.thepalbi.relations.*;
+import wtf.thepalbi.utils.HeapLocationFactory;
 import wtf.thepalbi.utils.UUIDHeapLocationFactory;
 
 import java.io.File;
@@ -19,6 +16,8 @@ import static wtf.thepalbi.relations.FactWriter.writeMethod;
 import static wtf.thepalbi.relations.FactWriter.writeSignature;
 
 public class PointToAnalysis {
+
+    private HeapLocationFactory heapLocationFactory = new UUIDHeapLocationFactory();
 
     public static final String OUTPUT_FILE_EXTENSION = ".csv";
     public static String IO_SEPARATOR = ";";
@@ -44,6 +43,26 @@ public class PointToAnalysis {
 
         // Add reachable facts according to starting method
         accumulatedFacts.add(new ReachableFact(startingMethod.getMethod()));
+        // Fix VCall to method without Soot Bodies
+        Collection<SouffleFact> fixFacts = new HashSet<>();
+        accumulatedFacts.stream()
+                .filter(fact -> fact instanceof VCallFact)
+                .map(vCallFact -> ((VCallFact) vCallFact).getCalledMethodRef())
+                // Filter for non-interface methods TODO: How should I handle them?
+                // and with no active body. Also, omit Void returning methods
+                .filter(methodRef -> !methodRef.getDeclaringClass().isInterface() &&
+                        !methodRef.resolve().hasActiveBody() &&
+                        !(methodRef.getReturnType() instanceof VoidType))
+                .forEach(methodRef -> {
+                    String fakeReturnLocalName = FactWriter.writeMethod(methodRef) + "fake_return_local";
+                    String fakeHeapObject = this.heapLocationFactory.generate();
+                    // Since method body is not parsed, a fake return should be added, and the corresponding Alloc
+                    // and HeapType for that fake local allocation
+                    fixFacts.add(new FormalReturnFact(methodRef, fakeReturnLocalName));
+                    fixFacts.add(new AllocFact(fakeReturnLocalName, fakeHeapObject, methodRef));
+                    fixFacts.add(new HeapTypeFact(fakeHeapObject, methodRef.getReturnType().toString()));
+                });
+        accumulatedFacts.addAll(fixFacts);
 
         // Write all facts to their corresponding input files
         for (SouffleFact fact : accumulatedFacts) {
@@ -61,12 +80,16 @@ public class PointToAnalysis {
         }
 
         // Run Souffle script
-        Process souffleProcess = Runtime.getRuntime().exec(new String[]{
+        String[] souffleCommand = {
                 "souffle",
                 "-F" + inputDirectory,
                 "-D" + outputDirectory,
                 this.getClass().getClassLoader().getResource("vanilla-andersen.dl").getPath()
-        });
+        };
+
+        System.out.println("Souffle command: " + String.join(" ", souffleCommand));
+
+        Process souffleProcess = Runtime.getRuntime().exec(souffleCommand);
 
         int exitCode = souffleProcess.waitFor();
         if (exitCode != 0) {
@@ -92,7 +115,7 @@ public class PointToAnalysis {
 
     private Collection<SouffleFact> collectFactsForBody(Body methodBody, Scene scene) {
         Collection<SouffleFact> collectedFacts =
-                new StmtToSouffleFactTranslator(new UUIDHeapLocationFactory()).translateMethodBody(methodBody);
+                new StmtToSouffleFactTranslator(heapLocationFactory).translateMethodBody(methodBody);
 
         // Generate Subtype facts
         Collection<SouffleFact> lookupFacts = new HashSet<>();

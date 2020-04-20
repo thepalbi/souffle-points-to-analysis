@@ -40,7 +40,7 @@ public class StmtToSouffleFactTranslator {
                 SouffleFact heapTypeFact = new HeapTypeFact(newHeapLocation, fromValue.getType().toString());
 
                 // Alloc
-                SouffleFact allocFact = new AllocFact(uniqueLocalName(toLocal, method), newHeapLocation, writeMethod(method));
+                SouffleFact allocFact = new AllocFact(uniqueLocalName(toLocal, method), newHeapLocation, method);
 
                 collectedFacts.add(allocFact);
                 collectedFacts.add(heapTypeFact);
@@ -75,12 +75,14 @@ public class StmtToSouffleFactTranslator {
                 // Called method signature, prepared for lookup. SubSignature is the signature of the method without the owning class.
                 String calledMethodSignature = invokeExpr.getMethodRef().getSubSignature().getString();
 
+                // NOTE: Saving Soot called method ref to handle fact post-processing
                 // VCall
                 collectedFacts.add(new VCallFact(
                         uniqueLocalName(callBase, method),
                         calledMethodSignature,
                         invocationSite,
-                        method));
+                        method,
+                        invokeExpr.getMethodRef()));
 
                 // ActualArg
                 for (int i = 0; i < invokeExpr.getArgCount(); i++) {
