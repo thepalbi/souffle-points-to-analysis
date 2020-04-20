@@ -105,6 +105,14 @@ public class StmtToSouffleFactTranslator {
     private void translateMethodInvocation(Stmt stmt, SootMethod method, Local toValue, InvokeExpr invocation) {
         Local toLocal = toValue;
 
+        if (!(invocation instanceof InstanceInvokeExpr) && !(invocation instanceof StaticInvokeExpr)) {
+            // TODO: Log something, not currently handling this
+            // Skipping
+            return;
+        }
+
+        // invocation is either an instance or static invocation
+
         // Generate invocation site
         // NOTE: Characterizing an invocation site with methodsSignature and the line # inside the Java source
         // TODO: Do something to craft a unique invocation site name when no line number available
@@ -112,16 +120,13 @@ public class StmtToSouffleFactTranslator {
 
         if (invocation instanceof InstanceInvokeExpr) {
             InstanceInvokeExpr invokeExpr = (InstanceInvokeExpr) invocation;
-
             if (!(invokeExpr.getBase() instanceof Local)) {
                 throw new FeatureNotImplementedException("'VCall' does not support non-local bases");
             }
 
             Local callBase = (Local) invokeExpr.getBase();
-
             // Called method signature, prepared for lookup. SubSignature is the signature of the method without the owning class.
             String calledMethodSignature = invokeExpr.getMethodRef().getSubSignature().getString();
-
             // NOTE: Saving Soot called method ref to handle fact post-processing
             // VCall
             collectedFacts.add(new VCallFact(
@@ -130,22 +135,6 @@ public class StmtToSouffleFactTranslator {
                     invocationSite,
                     method,
                     invokeExpr.getMethodRef()));
-
-            // ActualArg
-            for (int i = 0; i < invokeExpr.getArgCount(); i++) {
-                Value ithParameterValue = invokeExpr.getArg(i);
-
-                if (!(ithParameterValue instanceof Local)) {
-                    // TODO: Log something about a non-local argument in a instance virtual call
-                    continue;
-                }
-
-                Local ithParameterLocal = (Local) ithParameterValue;
-                collectedFacts.add(new ActualArgFact(invocationSite, i, uniqueLocalName(ithParameterLocal, method)));
-            }
-
-            // ActualReturn
-            collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
         } else if (invocation instanceof StaticInvokeExpr) {
             StaticInvokeExpr staticInvokeExpr = (StaticInvokeExpr) invocation;
 
@@ -154,28 +143,25 @@ public class StmtToSouffleFactTranslator {
                     FactWriter.writeMethod(method),
                     FactWriter.writeMethod(staticInvokeExpr.getMethodRef()),
                     staticInvokeExpr.getMethodRef()));
+        }
 
-            // ActualArg
-            for (int i = 0; i < staticInvokeExpr.getArgCount(); i++) {
-                Value ithParameterValue = staticInvokeExpr.getArg(i);
+        // ActualArg
+        for (int i = 0; i < invocation.getArgCount(); i++) {
+            Value ithParameterValue = invocation.getArg(i);
 
-                if (!(ithParameterValue instanceof Local)) {
-                    // TODO: Log something about a non-local argument in a instance virtual call
-                    continue;
-                }
-
-                Local ithParameterLocal = (Local) ithParameterValue;
-                collectedFacts.add(new ActualArgFact(invocationSite, i, uniqueLocalName(ithParameterLocal, method)));
+            if (!(ithParameterValue instanceof Local)) {
+                // TODO: Log something about a non-local argument in a instance virtual call
+                continue;
             }
 
-            // ActualReturn
-            collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
-        } else {
-            // TODO: Log something, not currently handling this
-            // Skipping
-            return;
+            Local ithParameterLocal = (Local) ithParameterValue;
+            collectedFacts.add(new ActualArgFact(invocationSite, i, uniqueLocalName(ithParameterLocal, method)));
         }
+
+        // ActualReturn
+        collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
     }
+
 
     private String uniqueLocalName(Local local, SootMethod method) {
         return writeMethod(method) + local.getName();
