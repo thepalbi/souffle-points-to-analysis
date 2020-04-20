@@ -34,6 +34,9 @@
 .decl ThisVar(method: methodName, var: variable)
 .decl InterProcAssign(to: variable, from: variable)
 
+// Extensions
+.decl StaticVCall(invo: invocationSite, callee: methodName, called: methodName)
+
 VarPointsTo(Var, Heap) :-
     Reachable(Meth), Alloc(Var, Heap, Meth).
 
@@ -76,6 +79,15 @@ CallGraph(InvocationSite, CalledMethod) :-
     Lookup(HeapType, SignatureOfCalledMethod, CalledMethod),
     !ThisVar(CalledMethod, _).
 
+// Static method calls
+Reachable(CalledStaticMethod),
+CallGraph(InvocationSite, CalledStaticMethod) :-
+    // Assuming static methods can be statically defined
+    // NOTE: In here, the base of the method call is not important, since the class obejct to which the
+    // method is dispatched is already encoded in the method itself.
+    StaticVCall(InvocationSite, CalleeMethod, CalledStaticMethod),
+    Reachable(CalleeMethod).
+
 InterProcAssign(To, From) :-
     CallGraph(InvocationSite, CalledMethod),
     FormalArg(CalledMethod, ArgumentNumber, To),
@@ -96,6 +108,7 @@ VarPointsTo(To, Heap) :-
 .input Load(IO=file, delimiter=";")
 .input Store(IO=file, delimiter=";")
 .input VCall(IO=file, delimiter=";")
+.input StaticVCall(IO=file, delimiter=";")
 
 // Invocation related
 .input ActualArg(IO=file, delimiter=";")

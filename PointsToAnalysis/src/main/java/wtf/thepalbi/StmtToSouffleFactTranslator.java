@@ -47,57 +47,7 @@ public class StmtToSouffleFactTranslator {
                 Local fromLocal = (Local) fromValue;
                 collectedFacts.add(new MoveFact(uniqueLocalName(toLocal, method), uniqueLocalName(fromLocal, method)));
             } else if (toValue instanceof Local && fromValue instanceof InvokeExpr) {
-                // TODO: Implement Invoke (instance or other types) to Local assignment
-                Local toLocal = (Local) toValue;
-
-                if (!(fromValue instanceof InstanceInvokeExpr)) {
-                    // TODO: Log something, not currently handling this
-                    // Skipping
-                    return;
-                }
-
-                InstanceInvokeExpr invokeExpr = (InstanceInvokeExpr) fromValue;
-
-                if (!(invokeExpr.getBase() instanceof Local)) {
-                    throw new FeatureNotImplementedException("'VCall' does not support non-local bases");
-                }
-
-                Local callBase = (Local) invokeExpr.getBase();
-
-                // Generate invocation site
-                // NOTE: Characterizing an invocation site with methodsSignature and the line # inside the Java source
-                // TODO: Do something to craft a unique invocation site name when no line number available
-                String invocationSite = String.format("%s:%d", writeMethod(method), stmt.getJavaSourceStartLineNumber());
-
-                // Called method signature, prepared for lookup. SubSignature is the signature of the method without the owning class.
-                String calledMethodSignature = invokeExpr.getMethodRef().getSubSignature().getString();
-
-                // NOTE: Saving Soot called method ref to handle fact post-processing
-                // VCall
-                collectedFacts.add(new VCallFact(
-                        uniqueLocalName(callBase, method),
-                        calledMethodSignature,
-                        invocationSite,
-                        method,
-                        invokeExpr.getMethodRef()));
-
-                // ActualArg
-                for (int i = 0; i < invokeExpr.getArgCount(); i++) {
-                    Value ithParameterValue = invokeExpr.getArg(i);
-
-                    if (!(ithParameterValue instanceof Local)) {
-                        // TODO: Log something about a non-local argument in a instance virtual call
-                        continue;
-                    }
-
-                    Local ithParameterLocal = (Local) ithParameterValue;
-                    collectedFacts.add(new ActualArgFact(invocationSite, i, uniqueLocalName(ithParameterLocal, method)));
-                }
-
-                // ActualReturn
-                collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
-
-
+                translateMethodInvocation(stmt, method, (Local) toValue, (InvokeExpr) fromValue);
             } else if (toValue instanceof InstanceFieldRef && fromValue instanceof Local) {
                 // NOTE: Static fields not handled. I think they are not involved in Points-To resolution?
                 // Store
@@ -149,6 +99,81 @@ public class StmtToSouffleFactTranslator {
             } else {
                 throw new FeatureNotImplementedException("'FormalReturn' not implemented for " + returnStmt.getOp().getClass().getName());
             }
+        }
+    }
+
+    private void translateMethodInvocation(Stmt stmt, SootMethod method, Local toValue, InvokeExpr invocation) {
+        Local toLocal = toValue;
+
+        // Generate invocation site
+        // NOTE: Characterizing an invocation site with methodsSignature and the line # inside the Java source
+        // TODO: Do something to craft a unique invocation site name when no line number available
+        String invocationSite = String.format("%s:%d", writeMethod(method), stmt.getJavaSourceStartLineNumber());
+
+        if (invocation instanceof InstanceInvokeExpr) {
+            InstanceInvokeExpr invokeExpr = (InstanceInvokeExpr) invocation;
+
+            if (!(invokeExpr.getBase() instanceof Local)) {
+                throw new FeatureNotImplementedException("'VCall' does not support non-local bases");
+            }
+
+            Local callBase = (Local) invokeExpr.getBase();
+
+            // Called method signature, prepared for lookup. SubSignature is the signature of the method without the owning class.
+            String calledMethodSignature = invokeExpr.getMethodRef().getSubSignature().getString();
+
+            // NOTE: Saving Soot called method ref to handle fact post-processing
+            // VCall
+            collectedFacts.add(new VCallFact(
+                    uniqueLocalName(callBase, method),
+                    calledMethodSignature,
+                    invocationSite,
+                    method,
+                    invokeExpr.getMethodRef()));
+
+            // ActualArg
+            for (int i = 0; i < invokeExpr.getArgCount(); i++) {
+                Value ithParameterValue = invokeExpr.getArg(i);
+
+                if (!(ithParameterValue instanceof Local)) {
+                    // TODO: Log something about a non-local argument in a instance virtual call
+                    continue;
+                }
+
+                Local ithParameterLocal = (Local) ithParameterValue;
+                collectedFacts.add(new ActualArgFact(invocationSite, i, uniqueLocalName(ithParameterLocal, method)));
+            }
+
+            // ActualReturn
+            collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
+        } else if (invocation instanceof StaticInvokeExpr) {
+            StaticInvokeExpr staticInvokeExpr = (StaticInvokeExpr) invocation;
+
+            collectedFacts.add(new StaticVCallFact(
+                    invocationSite,
+                    FactWriter.writeMethod(method),
+                    FactWriter.writeMethod(staticInvokeExpr.getMethodRef()),
+                    staticInvokeExpr.getMethodRef()));
+
+            // ActualArg
+            for (int i = 0; i < staticInvokeExpr.getArgCount(); i++) {
+                Value ithParameterValue = staticInvokeExpr.getArg(i);
+
+                if (!(ithParameterValue instanceof Local)) {
+                    // TODO: Log something about a non-local argument in a instance virtual call
+                    continue;
+                }
+
+                Local ithParameterLocal = (Local) ithParameterValue;
+                collectedFacts.add(new ActualArgFact(invocationSite, i, uniqueLocalName(ithParameterLocal, method)));
+            }
+
+            // ActualReturn
+            collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
+        } else {
+            // TODO: Log something, not currently handling this
+            // Skipping
+            return;
         }
     }
 

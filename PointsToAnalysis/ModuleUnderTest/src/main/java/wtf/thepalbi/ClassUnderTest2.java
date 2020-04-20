@@ -2,14 +2,14 @@ package wtf.thepalbi;
 
 public class ClassUnderTest2 {
     public static void main(String args) {
-        Animal someAnimal = new AnimalFactory().build();
+        Animal someAnimal = AnimalFactory.build();
         String animalDialogue = someAnimal.talk();
         System.out.println(animalDialogue);
     }
 }
 
 class AnimalFactory {
-    public Animal build() {
+    public static Animal build() {
         return new Dog();
     }
 }
