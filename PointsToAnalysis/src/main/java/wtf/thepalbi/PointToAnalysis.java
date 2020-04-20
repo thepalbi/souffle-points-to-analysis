@@ -126,7 +126,8 @@ public class PointToAnalysis {
         for (String[] csvRow : parsedOutputFacts.get("VarPointsTo")) {
             String localName = csvRow[0];
             String heapLocation = csvRow[1];
-            HeapObject heapObject = new HeapObject(heapLocation, heapLocationToType.get(heapLocation));;
+            HeapObject heapObject = new HeapObject(heapLocation, heapLocationToType.get(heapLocation));
+            ;
             localToHeapObject
                     .computeIfAbsent(localName, someLocalName -> new LinkedList<>())
                     .add(heapObject);
@@ -144,13 +145,13 @@ public class PointToAnalysis {
 
         collectedFacts.stream()
                 .filter(fact -> fact instanceof TypeFact)
-                .map(fact -> ((TypeFact) fact).getType().toString())
+                .map(fact -> ((TypeFact) fact).getType())
                 .forEach(seenTypeName -> {
-                    SootClass seenClass = scene.getSootClass(seenTypeName);
+                    SootClass seenClass = scene.getSootClass(seenTypeName.toString());
                     for (SootMethod method : seenClass.getMethods()) {
                         // Generate a Lookup fact for seenType -> method -> method signature
                         lookupFacts.add(new LookupFact(
-                                seenTypeName,
+                                seenTypeName.toString(),
                                 writeSignature(method),
                                 writeMethod(method)));
                     }

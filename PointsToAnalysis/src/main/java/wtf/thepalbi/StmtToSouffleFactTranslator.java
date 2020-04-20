@@ -81,6 +81,11 @@ public class StmtToSouffleFactTranslator {
                         uniqueLocalName(fromFieldBase, method),
                         fromField.getField().getSignature());
                 collectedFacts.add(loadFact);
+            } else {
+                // TODO: Improve logging here
+                System.out.format("Assign statements with ops: %s - %s not supported\n",
+                        assignStmt.getLeftOp().getClass(),
+                        assignStmt.getRightOp().getClass());
             }
         } else if (stmt instanceof ReturnStmt) {
 
@@ -174,7 +179,8 @@ public class StmtToSouffleFactTranslator {
         // All locals can be collected from the supplied method body
         body.getLocals().stream().forEach(local -> {
             SouffleFact typeFact = new VarTypeFact(uniqueLocalName(local, body.getMethod()), local.getType());
-            collectedFacts.add(typeFact);
+            // NOTE: VarType facts not used in current points-to implementation
+            // collectedFacts.add(typeFact);
         });
 
         // ThisVar

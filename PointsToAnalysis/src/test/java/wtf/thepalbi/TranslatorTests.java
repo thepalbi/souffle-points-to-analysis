@@ -48,19 +48,17 @@ public class TranslatorTests {
     // TODO: Start adding test cases just counting the expected fact count of some type to the Jimple translation
 
     @Test
-    public void simpleTranslation() throws Exception {
+    public void supportMethodWithArrayTypesInSignature() throws Exception {
         Body methodBody = getBodyForClassAndMethod("wtf.thepalbi.ClassUnderTest1", "main");
-        PointToAnalysis analysis = new PointToAnalysis();
-
         String targetPackage = "wtf.thepalbi";
-
         List<Body> targetBodies = Scene.v().getClasses().stream()
                 .filter(sootClass -> sootClass.getPackageName().startsWith(targetPackage))
+                // Filter interface, they do not have method bodies
+                .filter(sootClass -> !sootClass.isInterface())
                 .map(sootClass -> sootClass.getMethods())
                 .flatMap(sootMethods -> sootMethods.stream().map(sootMethod -> sootMethod.getActiveBody()))
                 .collect(Collectors.toList());
-
-        PointsToResult result = analysis.run(targetBodies, methodBody, Scene.v());
+        new PointToAnalysis().run(targetBodies, methodBody, Scene.v());
     }
 
     @Test
