@@ -1,5 +1,6 @@
 package wtf.thepalbi;
 
+import org.apache.commons.io.FileUtils;
 import soot.*;
 import wtf.thepalbi.relations.*;
 import wtf.thepalbi.utils.HeapLocationFactory;
@@ -7,6 +8,7 @@ import wtf.thepalbi.utils.UUIDHeapLocationFactory;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -79,12 +81,17 @@ public class PointToAnalysis {
             writer.close();
         }
 
+        // Write datalog script to temp file
+        InputStream pointsToScriptAsStream = this.getClass().getClassLoader().getResourceAsStream("vanilla-andersen.dl");
+        String tempWrittenScript = workingDirectory + "/script.dl";
+        FileUtils.copyInputStreamToFile(pointsToScriptAsStream, new File(tempWrittenScript));
+
         // Run Souffle script
         String[] souffleCommand = {
                 "souffle",
                 "-F" + inputDirectory,
                 "-D" + outputDirectory,
-                this.getClass().getClassLoader().getResource("vanilla-andersen.dl").getPath()
+                tempWrittenScript
         };
 
         System.out.println("Souffle command: " + String.join(" ", souffleCommand));

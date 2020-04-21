@@ -18,12 +18,4 @@ public class PointsToResult {
     public List<HeapObject> localPointsTo(SootMethod method, String localName) {
         return localToHeapObject.get(method.getSignature() + localName);
     }
-
-    public Iterator<HeapObject> getAllHeapObject() {
-        return localToHeapObject.values().stream().flatMap(heapObjects -> heapObjects.stream()).iterator();
-    }
-
-    public Stream<HeapObject> getAllHeapObjectAsStream() {
-        return localToHeapObject.values().stream().flatMap(heapObjects -> heapObjects.stream());
-    }
 }
