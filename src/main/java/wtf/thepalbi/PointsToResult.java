@@ -2,11 +2,8 @@ package wtf.thepalbi;
 
 import soot.SootMethod;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * Result of a {@link PointToAnalysis}.

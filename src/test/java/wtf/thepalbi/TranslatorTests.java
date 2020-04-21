@@ -25,7 +25,8 @@ public class TranslatorTests {
         // Adding soot classpath
 
         // Set as classpath both test and src classes
-        Options.v().set_process_dir(asList("/Users/thepalbi/Facultad/aap/souffle-points-to-analysis/PointsToAnalysis/ModuleUnderTest/target/classes"));
+        // TODO: Fix this! Read ideas in notebook for using Janino + Soot for testing.
+        Options.v().set_process_dir(asList("/Users/thepalbi/Facultad/aap/souffle-points-to-analysis/ModuleUnderTest/target/classes"));
         // Add rt.jar in classpath
         Options.v().set_prepend_classpath(true);
         // Output format is Jimple, so JBP wil be used
