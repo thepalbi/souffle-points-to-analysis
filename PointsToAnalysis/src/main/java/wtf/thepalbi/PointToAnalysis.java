@@ -18,6 +18,9 @@ import java.util.stream.Collectors;
 import static wtf.thepalbi.relations.FactWriter.writeMethod;
 import static wtf.thepalbi.relations.FactWriter.writeSignature;
 
+/**
+ * Main class for running a points to analysis.
+ */
 public class PointToAnalysis {
 
     private HeapLocationFactory heapLocationFactory = new UUIDHeapLocationFactory();
@@ -35,10 +38,26 @@ public class PointToAnalysis {
 
     private final Scene scene;
 
+    /**
+     * Builds a new {@link PointToAnalysis} using an already existing {@link Scene}. Note that the supplied scene must
+     * already have ran though the Body Packs. This ensures that the classes are loaded in its Jimple form.
+     *
+     * @param scene a Soot scene from which to load classes in the form of A{@link SootClass}.
+     */
     public PointToAnalysis(Scene scene) {
         this.scene = scene;
     }
 
+    /**
+     * Runs the analysis for the classes below the given package name, using as the first <it>reachable</it> class the
+     * starting method.
+     *
+     * @param packageName    A package name from which to load classes the analysis will look into.
+     * @param startingMethod The main method from which to run the analysis. This will be the method marked as
+     *                       <it>reachable</it>.
+     * @return The result of the analysis.
+     * @throws Exception is raised if something fails during the analysis.  // TODO: Improve error handling.
+     */
     public PointsToResult forClassesUnderPackage(String packageName, Body startingMethod) throws Exception {
         List<Body> targetBodies = Scene.v().getClasses().stream()
                 .filter(sootClass -> sootClass.getPackageName().startsWith(packageName))
