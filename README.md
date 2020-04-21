@@ -6,7 +6,7 @@ by Yannis Smaragdakis and George Balatsouras. This implementations leverages [So
 
 ## Analysis Features
 - Handles instance and static method calls
-- Handles calls to methods [without a body available for analysis](Missing-method-body-calls) 
+- Handles calls to methods [without a body available for analysis](#Missing-method-body-calls) 
 - On the fly Call-Graph generation
 - Context-Insensitive
 
