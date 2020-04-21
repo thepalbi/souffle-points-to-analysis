@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static wtf.thepalbi.relations.FactWriter.writeMethod;
 import static wtf.thepalbi.relations.FactWriter.writeSignature;
@@ -32,7 +33,25 @@ public class PointToAnalysis {
             "InterProcAssign",
             "Reachable");
 
-    public PointsToResult run(Iterable<Body> bodies, Body startingMethod, Scene scene) throws Exception {
+    private final Scene scene;
+
+    public PointToAnalysis(Scene scene) {
+        this.scene = scene;
+    }
+
+    public PointsToResult forClassesUnderPackage(String packageName, Body startingMethod) throws Exception {
+        List<Body> targetBodies = Scene.v().getClasses().stream()
+                .filter(sootClass -> sootClass.getPackageName().startsWith(packageName))
+                // Filter interface, they do not have method bodies
+                .filter(sootClass -> !sootClass.isInterface())
+                .map(sootClass -> sootClass.getMethods())
+                // This might fail because some class has no active body
+                .flatMap(sootMethods -> sootMethods.stream().map(sootMethod -> sootMethod.getActiveBody()))
+                .collect(Collectors.toList());
+        return run(targetBodies, startingMethod);
+    }
+
+    private PointsToResult run(Iterable<Body> bodies, Body startingMethod) throws Exception {
         Path workingDirectory = Files.createTempDirectory("points-to-");
         Path inputDirectory = Files.createDirectory(Paths.get(workingDirectory + "/input"));
         Path outputDirectory = Files.createDirectory(Paths.get(workingDirectory + "/output"));

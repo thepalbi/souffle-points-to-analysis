@@ -1,6 +1,5 @@
 package wtf.thepalbi;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import soot.Body;
 import soot.PackManager;
@@ -50,29 +49,13 @@ public class TranslatorTests {
     @Test
     public void supportMethodWithArrayTypesInSignature() throws Exception {
         Body methodBody = getBodyForClassAndMethod("wtf.thepalbi.ClassUnderTest1", "main");
-        String targetPackage = "wtf.thepalbi";
-        List<Body> targetBodies = Scene.v().getClasses().stream()
-                .filter(sootClass -> sootClass.getPackageName().startsWith(targetPackage))
-                // Filter interface, they do not have method bodies
-                .filter(sootClass -> !sootClass.isInterface())
-                .map(sootClass -> sootClass.getMethods())
-                .flatMap(sootMethods -> sootMethods.stream().map(sootMethod -> sootMethod.getActiveBody()))
-                .collect(Collectors.toList());
-        new PointToAnalysis().run(targetBodies, methodBody, Scene.v());
+        new PointToAnalysis(Scene.v()).forClassesUnderPackage("wtf.thepalbi", methodBody);
     }
 
     @Test
     public void findTargetClassOfFactoryWithInterfaces() throws Exception {
         Body mainTestMethod = getBodyForClassAndMethod("wtf.thepalbi.ClassUnderTest2", "main");
-        String targetPackage = "wtf.thepalbi";
-        List<Body> targetBodies = Scene.v().getClasses().stream()
-                .filter(sootClass -> sootClass.getPackageName().startsWith(targetPackage))
-                // Filter interface, they do not have method bodies
-                .filter(sootClass -> !sootClass.isInterface())
-                .map(sootClass -> sootClass.getMethods())
-                .flatMap(sootMethods -> sootMethods.stream().map(sootMethod -> sootMethod.getActiveBody()))
-                .collect(Collectors.toList());
-        PointsToResult result = new PointToAnalysis().run(targetBodies, mainTestMethod, Scene.v());
+        PointsToResult result = new PointToAnalysis(Scene.v()).forClassesUnderPackage("wtf.thepalbi", mainTestMethod);
         assertThat(result.localPointsTo(mainTestMethod.getMethod(), "r1"), not(empty()));
         assertThat(result.localPointsTo(mainTestMethod.getMethod(), "r1"), hasSize(1));
         assertThat(result.localPointsTo(mainTestMethod.getMethod(), "r1").get(0).getType(), is("wtf.thepalbi.Dog"));
