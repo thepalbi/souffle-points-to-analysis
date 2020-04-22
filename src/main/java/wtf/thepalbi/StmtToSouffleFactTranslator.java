@@ -47,7 +47,11 @@ public class StmtToSouffleFactTranslator {
                 Local fromLocal = (Local) fromValue;
                 collectedFacts.add(new MoveFact(uniqueLocalName(toLocal, method), uniqueLocalName(fromLocal, method)));
             } else if (toValue instanceof Local && fromValue instanceof InvokeExpr) {
-                translateMethodInvocation(stmt, method, (Local) toValue, (InvokeExpr) fromValue);
+                Local toLocal = (Local) toValue;
+                String invocationSite = getInvocationSite(method, stmt.getJavaSourceStartLineNumber());
+                translateMethodInvocation(invocationSite, method, (InvokeExpr) fromValue);
+                // ActualReturn
+                collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
             } else if (toValue instanceof InstanceFieldRef && fromValue instanceof Local) {
                 // NOTE: Static fields not handled. I think they are not involved in Points-To resolution?
                 // Store
@@ -104,24 +108,26 @@ public class StmtToSouffleFactTranslator {
             } else {
                 throw new FeatureNotImplementedException("'FormalReturn' not implemented for " + returnStmt.getOp().getClass().getName());
             }
+        } else if (stmt instanceof InvokeStmt) {
+            String invocationSite = getInvocationSite(method, stmt.getJavaSourceStartLineNumber());
+            translateMethodInvocation(invocationSite, method, stmt.getInvokeExpr());
         }
     }
 
-    private void translateMethodInvocation(Stmt stmt, SootMethod method, Local toValue, InvokeExpr invocation) {
-        Local toLocal = toValue;
+    private String getInvocationSite(SootMethod method, int inMethodIdentifier) {
+        // Generate invocation site
+        // NOTE: Characterizing an invocation site with methodsSignature and the line # inside the Java source
+        // TODO: Do something to craft a unique invocation site name when no line number available
+        return String.format("%s:%d", writeMethod(method), inMethodIdentifier);
+    }
 
+    private void translateMethodInvocation(String invocationSite, SootMethod method, InvokeExpr invocation) {
+        // invocation is either an instance or static invocation
         if (!(invocation instanceof InstanceInvokeExpr) && !(invocation instanceof StaticInvokeExpr)) {
             // TODO: Log something, not currently handling this
             // Skipping
             return;
         }
-
-        // invocation is either an instance or static invocation
-
-        // Generate invocation site
-        // NOTE: Characterizing an invocation site with methodsSignature and the line # inside the Java source
-        // TODO: Do something to craft a unique invocation site name when no line number available
-        String invocationSite = String.format("%s:%d", writeMethod(method), stmt.getJavaSourceStartLineNumber());
 
         if (invocation instanceof InstanceInvokeExpr) {
             InstanceInvokeExpr invokeExpr = (InstanceInvokeExpr) invocation;
@@ -134,6 +140,8 @@ public class StmtToSouffleFactTranslator {
             String calledMethodSignature = invokeExpr.getMethodRef().getSubSignature().getString();
             // NOTE: Saving Soot called method ref to handle fact post-processing
             // VCall
+            // FIXME: Case when a constructor call the constructor of the Super class. Both are resolved as the same method.
+            //  See ClassUnderTest3 call graph.
             collectedFacts.add(new VCallFact(
                     uniqueLocalName(callBase, method),
                     calledMethodSignature,
@@ -162,9 +170,6 @@ public class StmtToSouffleFactTranslator {
             Local ithParameterLocal = (Local) ithParameterValue;
             collectedFacts.add(new ActualArgFact(invocationSite, i, uniqueLocalName(ithParameterLocal, method)));
         }
-
-        // ActualReturn
-        collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
     }
 
 
