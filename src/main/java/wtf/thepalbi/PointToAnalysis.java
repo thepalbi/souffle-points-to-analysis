@@ -87,13 +87,16 @@ public class PointToAnalysis {
         Collection<SouffleFact> fixFacts = new HashSet<>();
         accumulatedFacts.stream()
                 .filter(fact -> fact instanceof VCallFact)
-                .map(vCallFact -> ((VCallFact) vCallFact).getCalledMethodRef())
-                // Filter for non-interface methods TODO: How should I handle them?
-                // and with no active body. Also, omit Void returning methods
-                .filter(methodRef -> !methodRef.getDeclaringClass().isInterface() &&
-                        !methodRef.resolve().hasActiveBody() &&
-                        !(methodRef.getReturnType() instanceof VoidType))
-                .forEach(methodRef -> {
+                .filter(vCallFact -> {
+                    SootMethodRef methodRef = ((VCallFact) vCallFact).getCalledMethodRef();
+                    // Filter for non-interface methods TODO: How should I handle them?
+                    // and with no active body. Also, omit Void returning methods
+                    return !methodRef.getDeclaringClass().isInterface() &&
+                            !methodRef.resolve().hasActiveBody() &&
+                            !(methodRef.getReturnType() instanceof VoidType);
+                })
+                .forEach(vCallWithoutBody -> {
+                    SootMethodRef methodRef = ((VCallFact) vCallWithoutBody).getCalledMethodRef();
                     String fakeReturnLocalName = FactWriter.writeMethod(methodRef) + "fake_return_local";
                     String fakeHeapObject = this.heapLocationFactory.generate();
                     // Since method body is not parsed, a fake return should be added, and the corresponding Alloc

@@ -6,7 +6,9 @@ import wtf.thepalbi.relations.*;
 import wtf.thepalbi.utils.FeatureNotImplementedException;
 import wtf.thepalbi.utils.HeapLocationFactory;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
@@ -15,6 +17,7 @@ import static wtf.thepalbi.relations.FactWriter.writeMethod;
 public class StmtToSouffleFactTranslator {
     private HeapLocationFactory heapLocationFactory;
     private HashSet<SouffleFact> collectedFacts;
+    private Map<String, Integer> nextInvocationSiteUID = new HashMap<>();
 
     public StmtToSouffleFactTranslator(HeapLocationFactory heapLocationFactory) {
         this.heapLocationFactory = heapLocationFactory;
@@ -125,10 +128,11 @@ public class StmtToSouffleFactTranslator {
     }
 
     private String getInvocationSite(SootMethod method, int inMethodIdentifier) {
-        // Generate invocation site
-        // NOTE: Characterizing an invocation site with methodsSignature and the line # inside the Java source
-        // TODO: Do something to craft a unique invocation site name when no line number available
-        return String.format("%s:%d", writeMethod(method), inMethodIdentifier);
+        String invocationSiteName = String.format("%s:%d", writeMethod(method), inMethodIdentifier);
+        int invocationSiteUID = nextInvocationSiteUID.getOrDefault(invocationSiteName, 0);
+        String uniqueInvocationSite = invocationSiteName + ":" + invocationSiteUID;
+        nextInvocationSiteUID.put(invocationSiteName, invocationSiteUID + 1);
+        return uniqueInvocationSite;
     }
 
     private void translateMethodInvocation(String invocationSite, SootMethod method, InvokeExpr invocation) {

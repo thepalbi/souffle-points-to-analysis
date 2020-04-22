@@ -1,11 +1,11 @@
 package wtf.thepalbi;
 
+import org.junit.After;
 import org.junit.Test;
-import soot.Body;
-import soot.PackManager;
-import soot.Scene;
+import soot.*;
 import soot.options.Options;
 
+import java.io.PrintWriter;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -16,6 +16,11 @@ import static org.hamcrest.Matchers.*;
  * Unit test for simple App.
  */
 public class TranslatorTests {
+
+    @After
+    public void tearDown() throws Exception {
+        G.reset();
+    }
 
     public Body getBodyForClassAndMethod(String targetClassName, String methodName) {
         Options.v().setPhaseOption("jb", "use-original-names: true");
@@ -39,6 +44,8 @@ public class TranslatorTests {
         Scene.v().loadNecessaryClasses();
 
         PackManager.v().runBodyPacks();
+
+        Printer.v().printTo(Scene.v().getSootClass(targetClassName), new PrintWriter(System.out, true));
 
         // Get class first, then get desired method
         return Scene.v().getSootClass(targetClassName).getMethodByName(methodName).getActiveBody();
