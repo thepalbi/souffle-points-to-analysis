@@ -94,4 +94,17 @@ public class TranslatorTests {
         assertThat(pointedByPerroField, hasSize(1));
         assertThat(pointedByPerroField.get(0).getType(), is("java.lang.String"));
     }
+
+    @Test
+    public void interfaceFieldAssignedInConstructorViaParameter() throws Exception {
+        Body methodBody = getBodyForClassAndMethod("wtf.thepalbi.ClassUnderTest2", "main2");
+        PointsToResult result = new PointToAnalysis(Scene.v()).forClassesUnderPackage("wtf.thepalbi", methodBody);
+        List<HeapObject> pointedByPerroField = result.localFieldPointsTo(
+                methodBody.getMethod(),
+                "$r2",
+                methodBody.getMethod().getDeclaringClass().getFieldByName("favouriteAnimal").getSignature());
+        assertThat(pointedByPerroField, not(empty()));
+        assertThat(pointedByPerroField, hasSize(1));
+        assertThat(pointedByPerroField.get(0).getType(), is("wtf.thepalbi.Dog"));
+    }
 }
