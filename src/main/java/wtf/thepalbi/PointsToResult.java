@@ -5,6 +5,8 @@ import soot.SootMethod;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * Result of a {@link PointToAnalysis}.
  */
@@ -28,5 +30,12 @@ public class PointsToResult {
      */
     public List<HeapObject> localPointsTo(SootMethod method, String localName) {
         return localToHeapObject.get(method.getSignature() + localName);
+    }
+
+    public List<HeapObject> localFieldPointsTo(SootMethod method, String localName, String fieldSignature) {
+        // Object pointed by base
+        return localPointsTo(method, localName).stream()
+                .flatMap(ho -> ho.fieldPointsTo(fieldSignature).stream())
+                .collect(toList());
     }
 }

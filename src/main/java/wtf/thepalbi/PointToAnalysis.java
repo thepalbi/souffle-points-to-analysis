@@ -157,25 +157,36 @@ public class PointToAnalysis {
             parsedOutputFacts.put(expectedOutputFactsFile, csv);
         }
 
+
         // Compute a heapLocation to type map
-        Map<String, String> heapLocationToType = new HashMap<>();
+        // Global heap representation
+        Map<String, HeapObject> heap = new HashMap<>();
         accumulatedFacts.stream()
                 .filter(fact -> fact instanceof HeapTypeFact)
                 .map(fact -> (HeapTypeFact) fact)
-                .forEach(heapTypeFact -> {
-                    heapLocationToType.put(heapTypeFact.getHeapLocation(), heapTypeFact.getType().toString());
-                });
+                .forEach(heapTypeFact -> heap.put(
+                        heapTypeFact.getHeapLocation(),
+                        new HeapObject(
+                                heapTypeFact.getHeapLocation(),
+                                heapTypeFact.getType().toString())));
 
         // Compute a local to HeapObject map. Note there
         Map<String, List<HeapObject>> localToHeapObject = new HashMap<>();
         for (String[] csvRow : parsedOutputFacts.get("VarPointsTo")) {
             String localName = csvRow[0];
             String heapLocation = csvRow[1];
-            HeapObject heapObject = new HeapObject(heapLocation, heapLocationToType.get(heapLocation));
-            ;
             localToHeapObject
                     .computeIfAbsent(localName, someLocalName -> new LinkedList<>())
-                    .add(heapObject);
+                    .add(heap.get(heapLocation));
+        }
+
+        // Compute heapobject.field -> heapobject map
+        for (String[] csvRow : parsedOutputFacts.get("FieldPointsTo")) {
+            String baseHeapLoc = csvRow[0];
+            String fieldSignature = csvRow[1];
+            String pointedHeapLoc = csvRow[2];
+            // Gets the object from the heap, or `allocates` it according to its type
+            heap.get(baseHeapLoc).setFieldPointsTo(fieldSignature, heap.get(pointedHeapLoc));
         }
 
         return new PointsToResult(localToHeapObject);

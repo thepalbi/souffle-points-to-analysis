@@ -7,7 +7,6 @@ import soot.Scene;
 import soot.options.Options;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -60,5 +59,19 @@ public class TranslatorTests {
         assertThat(result.localPointsTo(mainTestMethod.getMethod(), "r1"), not(empty()));
         assertThat(result.localPointsTo(mainTestMethod.getMethod(), "r1"), hasSize(1));
         assertThat(result.localPointsTo(mainTestMethod.getMethod(), "r1").get(0).getType(), is("wtf.thepalbi.Dog"));
+    }
+
+    @Test
+    public void fieldsAssignedInSomeMethod() throws Exception {
+        // TODO: Check this test
+        Body methodBody = getBodyForClassAndMethod("wtf.thepalbi.ClassUnderTest1", "main");
+        PointsToResult result = new PointToAnalysis(Scene.v()).forClassesUnderPackage("wtf.thepalbi", methodBody);
+        List<HeapObject> pointedByPerroField = result.localFieldPointsTo(
+                methodBody.getMethod(),
+                "$r3",
+                methodBody.getMethod().getDeclaringClass().getFieldByName("perro").getSignature());
+        assertThat(pointedByPerroField, not(empty()));
+        assertThat(pointedByPerroField, hasSize(1));
+        assertThat(pointedByPerroField.get(0).getType(), is("java.lang.String"));
     }
 }
