@@ -52,7 +52,7 @@ public class StmtToSouffleFactTranslator {
                 translateMethodInvocation(invocationSite, method, (InvokeExpr) fromValue);
                 // ActualReturn
                 collectedFacts.add(new ActualReturnFact(invocationSite, uniqueLocalName(toLocal, method)));
-            } else if (toValue instanceof InstanceFieldRef && fromValue instanceof Local) {
+            } else if (toValue instanceof InstanceFieldRef) {
                 // NOTE: Static fields not handled. I think they are not involved in Points-To resolution?
                 // Store
                 InstanceFieldRef toField = (InstanceFieldRef) toValue;
@@ -62,12 +62,22 @@ public class StmtToSouffleFactTranslator {
                 }
 
                 Local toFieldBase = (Local) toField.getBase();
-                Local fromLocal = (Local) fromValue;
-                SouffleFact storeFact = new StoreFact(
-                        uniqueLocalName(toFieldBase, method),
-                        toField.getField().getSignature(),
-                        uniqueLocalName(fromLocal, method));
-                collectedFacts.add(storeFact);
+                if (fromValue instanceof Local) {
+                    SouffleFact storeFact = new StoreFact(
+                            uniqueLocalName(toFieldBase, method),
+                            toField.getField().getSignature(),
+                            uniqueLocalName((Local) fromValue, method));
+                    collectedFacts.add(storeFact);
+                } else if (fromValue instanceof Immediate) {
+                    String immediateHeapLoc = heapLocationFactory.generate();
+                    collectedFacts.add(new HeapTypeFact(immediateHeapLoc, fromValue.getType()));
+                    collectedFacts.add(new StoreImmediateFact(
+                            uniqueLocalName(toFieldBase, method),
+                            toField.getField().getSignature(),
+                            immediateHeapLoc));
+                } else {
+                    System.out.format("Assigning field from %s not supported\n", fromValue.getClass());
+                }
             } else if (toValue instanceof Local && fromValue instanceof InstanceFieldRef) {
                 // NOTE: Static fields not handled. Maybe in here they are necessary.
                 // Load

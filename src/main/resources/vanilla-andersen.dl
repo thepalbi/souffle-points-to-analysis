@@ -8,9 +8,13 @@
 
 // Input declarations
 .decl Move(v_to: variable, v_from: variable)
+// Handling move from immediate object
+.decl MoveImmediate(v_to: variable, heap: heapLocation)
 .decl VCall(base: variable, sig: methodSignature, invo: invocationSite, callee: methodName)
 .decl Load(v_to: variable, v_base: variable, field: fieldName)
 .decl Store(v_base: variable, field: fieldName, v_from: variable)
+// Handling store from immedaite object
+.decl StoreImmediate(v_base: variable, field: fieldName, heap: heapLocation)
 // Formal arg is determined in the method impl, by checing with IdentityStmt which local is assigned an argument
 .decl FormalArg(called: methodName, num: number, to: variable)
 // ActualArg is the place where the call is made, and the locals are assigned to arguments
@@ -42,6 +46,17 @@ VarPointsTo(Var, Heap) :-
 
 VarPointsTo(To, Heap) :-
     Move(To, From), VarPointsTo(From, Heap).
+
+// TODO: Is this necessary. I thinks this can be handled by an Alloc fact.
+// Move to local a directly allocated object.
+VarPointsTo(To, Heap) :-
+    MoveImmediate(To, Heap).
+
+// This is some kind of Alloc directly to a Field.
+// Storing into field a directly allocated object ```a.perro = "holis"````
+FieldPointsTo(BaseHeap, Field, Heap) :-
+    StoreImmediate(Base, Field, Heap), // Base.Field = From;
+    VarPointsTo(Base, BaseHeap).
 
 // Base is a variable name, and BaseHeap is the object pointed by Base
 FieldPointsTo(BaseHeap, Field, Heap) :-
@@ -105,8 +120,10 @@ VarPointsTo(To, Heap) :-
 // IR language
 .input Alloc(IO=file, delimiter=";")
 .input Move(IO=file, delimiter=";")
+.input MoveImmediate(IO=file, delimiter=";")
 .input Load(IO=file, delimiter=";")
 .input Store(IO=file, delimiter=";")
+.input StoreImmediate(IO=file, delimiter=";")
 .input VCall(IO=file, delimiter=";")
 .input StaticVCall(IO=file, delimiter=";")
 
