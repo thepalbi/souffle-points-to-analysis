@@ -7,6 +7,7 @@ import soot.options.Options;
 
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -15,7 +16,7 @@ import static org.hamcrest.Matchers.*;
 /**
  * Unit test for simple App.
  */
-public class TranslatorTests {
+public class PointsToAnalysisTests {
 
     @After
     public void tearDown() throws Exception {
@@ -106,5 +107,24 @@ public class TranslatorTests {
         assertThat(pointedByPerroField, not(empty()));
         assertThat(pointedByPerroField, hasSize(1));
         assertThat(pointedByPerroField.get(0).getType(), is("wtf.thepalbi.Dog"));
+    }
+
+    // TODO: Make analysis context sensitive
+    @Test
+    public void analysisIsContextInsensitive() throws Exception {
+        Body methodBody = getBodyForClassAndMethod("wtf.thepalbi.ClassUnderTest4", "main");
+        PointsToResult result = new PointToAnalysis(Scene.v()).forClassesUnderPackage("wtf.thepalbi", methodBody);
+        List<HeapObject> pointedObjects = result.localPointsTo(
+                methodBody.getMethod().getDeclaringClass().getMethodByName("fun1"),
+                "r1");
+
+        assertThat(pointedObjects, hasSize(2));
+        List<String> pointedClasses = pointedObjects.stream().map(obj -> obj.getType()).collect(Collectors.toList());
+
+        // Note that the analysis doesn't respect context sensitivity. By calling the 'id' methods in both 'fun1' and 'fun2'
+        // a fact is created stating that the object returned by `id` is of type `A1` and `A2`, hence the analysis doesn't differ
+        // from both calls.
+        // In the case of this analysis being context sensitive, the correct answer would be `pointedClasses == ["wtf.thepalbi.A1"]`.
+        assertThat(pointedClasses, containsInAnyOrder("wtf.thepalbi.A1", "wtf.thepalbi.A2"));
     }
 }
