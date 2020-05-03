@@ -98,7 +98,7 @@ CallGraph(InvocationSite, CalledMethod) :-
 Reachable(CalledStaticMethod),
 CallGraph(InvocationSite, CalledStaticMethod) :-
     // Assuming static methods can be statically defined
-    // NOTE: In here, the base of the method call is not important, since the class obejct to which the
+    // NOTE: In here, the base of the method call is not important, since the class object to which the
     // method is dispatched is already encoded in the method itself.
     StaticVCall(InvocationSite, CalleeMethod, CalledStaticMethod),
     Reachable(CalleeMethod).
