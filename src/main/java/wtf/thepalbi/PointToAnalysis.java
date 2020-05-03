@@ -59,7 +59,7 @@ public class PointToAnalysis {
      * @throws Exception is raised if something fails during the analysis.  // TODO: Improve error handling.
      */
     public PointsToResult forClassesUnderPackage(String packageName, Body startingMethod) throws Exception {
-        List<Body> targetBodies = Scene.v().getClasses().stream()
+        List<Body> targetBodies = scene.getClasses().stream()
                 .filter(sootClass -> sootClass.getPackageName().startsWith(packageName))
                 // Filter interface, they do not have method bodies
                 .filter(sootClass -> !sootClass.isInterface())

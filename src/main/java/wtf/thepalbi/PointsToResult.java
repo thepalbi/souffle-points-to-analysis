@@ -2,9 +2,11 @@ package wtf.thepalbi;
 
 import soot.SootMethod;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -29,7 +31,7 @@ public class PointsToResult {
      * @return A list of {@link HeapObject}s to which the local might point to.
      */
     public List<HeapObject> localPointsTo(SootMethod method, String localName) {
-        return localToHeapObject.get(method.getSignature() + localName);
+        return localToHeapObject.getOrDefault(method.getSignature() + localName, emptyList());
     }
 
     public List<HeapObject> localFieldPointsTo(SootMethod method, String localName, String fieldSignature) {

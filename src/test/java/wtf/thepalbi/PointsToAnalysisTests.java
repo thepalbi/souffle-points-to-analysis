@@ -58,6 +58,7 @@ public class PointsToAnalysisTests {
     public void supportMethodWithArrayTypesInSignature() throws Exception {
         Body methodBody = getBodyForClassAndMethod("wtf.thepalbi.ClassUnderTest1", "main");
         new PointToAnalysis(Scene.v()).forClassesUnderPackage("wtf.thepalbi", methodBody);
+
     }
 
     @Test
